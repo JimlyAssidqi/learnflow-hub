@@ -1,0 +1,275 @@
+import { User, Material, Quiz, QuizAttempt, ChatMessage, StudentProgress, OfflineMaterial } from '@/types';
+
+const DB_NAME = 'elearning_db';
+const DB_VERSION = 1;
+
+let db: IDBDatabase | null = null;
+
+export const initDB = (): Promise<IDBDatabase> => {
+  return new Promise((resolve, reject) => {
+    if (db) {
+      resolve(db);
+      return;
+    }
+
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onerror = () => reject(request.error);
+    
+    request.onsuccess = () => {
+      db = request.result;
+      resolve(db);
+    };
+
+    request.onupgradeneeded = (event) => {
+      const database = (event.target as IDBOpenDBRequest).result;
+
+      // Users store
+      if (!database.objectStoreNames.contains('users')) {
+        const usersStore = database.createObjectStore('users', { keyPath: 'id' });
+        usersStore.createIndex('email', 'email', { unique: true });
+        usersStore.createIndex('role', 'role', { unique: false });
+      }
+
+      // Materials store
+      if (!database.objectStoreNames.contains('materials')) {
+        const materialsStore = database.createObjectStore('materials', { keyPath: 'id' });
+        materialsStore.createIndex('teacherId', 'teacherId', { unique: false });
+      }
+
+      // Quizzes store
+      if (!database.objectStoreNames.contains('quizzes')) {
+        const quizzesStore = database.createObjectStore('quizzes', { keyPath: 'id' });
+        quizzesStore.createIndex('teacherId', 'teacherId', { unique: false });
+        quizzesStore.createIndex('materialId', 'materialId', { unique: false });
+      }
+
+      // Quiz attempts store
+      if (!database.objectStoreNames.contains('quizAttempts')) {
+        const attemptsStore = database.createObjectStore('quizAttempts', { keyPath: 'id' });
+        attemptsStore.createIndex('quizId', 'quizId', { unique: false });
+        attemptsStore.createIndex('studentId', 'studentId', { unique: false });
+      }
+
+      // Chat messages store
+      if (!database.objectStoreNames.contains('chatMessages')) {
+        const chatStore = database.createObjectStore('chatMessages', { keyPath: 'id' });
+        chatStore.createIndex('materialId', 'materialId', { unique: false });
+      }
+
+      // Student progress store
+      if (!database.objectStoreNames.contains('studentProgress')) {
+        const progressStore = database.createObjectStore('studentProgress', { keyPath: 'id' });
+        progressStore.createIndex('studentId', 'studentId', { unique: false });
+      }
+
+      // Offline materials store
+      if (!database.objectStoreNames.contains('offlineMaterials')) {
+        const offlineStore = database.createObjectStore('offlineMaterials', { keyPath: 'id' });
+        offlineStore.createIndex('materialId', 'materialId', { unique: true });
+      }
+    };
+  });
+};
+
+// Generic CRUD operations
+export const addItem = async <T extends { id: string }>(storeName: string, item: T): Promise<T> => {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.add(item);
+    request.onsuccess = () => resolve(item);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+export const updateItem = async <T extends { id: string }>(storeName: string, item: T): Promise<T> => {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.put(item);
+    request.onsuccess = () => resolve(item);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+export const deleteItem = async (storeName: string, id: string): Promise<void> => {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.delete(id);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+};
+
+export const getItem = async <T>(storeName: string, id: string): Promise<T | undefined> => {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.get(id);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+export const getAllItems = async <T>(storeName: string): Promise<T[]> => {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.getAll();
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+export const getItemsByIndex = async <T>(
+  storeName: string, 
+  indexName: string, 
+  value: string
+): Promise<T[]> => {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readonly');
+    const store = transaction.objectStore(storeName);
+    const index = store.index(indexName);
+    const request = index.getAll(value);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+export const getItemByIndex = async <T>(
+  storeName: string, 
+  indexName: string, 
+  value: string
+): Promise<T | undefined> => {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(storeName, 'readonly');
+    const store = transaction.objectStore(storeName);
+    const index = store.index(indexName);
+    const request = index.get(value);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+// Seed demo data
+export const seedDemoData = async () => {
+  const users = await getAllItems<User>('users');
+  if (users.length > 0) return; // Already seeded
+
+  // Create demo users
+  const demoUsers: User[] = [
+    {
+      id: 'admin-1',
+      email: 'admin@elearn.com',
+      name: 'Admin User',
+      role: 'admin',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'teacher-1',
+      email: 'teacher@elearn.com',
+      name: 'Dr. Sarah Johnson',
+      role: 'teacher',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'student-1',
+      email: 'student@elearn.com',
+      name: 'Alex Thompson',
+      role: 'student',
+      createdAt: new Date().toISOString(),
+    },
+  ];
+
+  for (const user of demoUsers) {
+    await addItem('users', user);
+  }
+
+  // Create demo materials
+  const demoMaterials: Material[] = [
+    {
+      id: 'material-1',
+      title: 'Introduction to Web Development',
+      description: 'Learn the fundamentals of HTML, CSS, and JavaScript',
+      type: 'pdf',
+      fileName: 'web-dev-intro.pdf',
+      fileSize: 2500000,
+      fileUrl: '',
+      teacherId: 'teacher-1',
+      teacherName: 'Dr. Sarah Johnson',
+      createdAt: new Date().toISOString(),
+      downloadCount: 45,
+    },
+    {
+      id: 'material-2',
+      title: 'React Fundamentals',
+      description: 'Master React components, hooks, and state management',
+      type: 'ppt',
+      fileName: 'react-fundamentals.pptx',
+      fileSize: 5000000,
+      teacherId: 'teacher-1',
+      teacherName: 'Dr. Sarah Johnson',
+      fileUrl: '',
+      createdAt: new Date().toISOString(),
+      downloadCount: 32,
+    },
+  ];
+
+  for (const material of demoMaterials) {
+    await addItem('materials', material);
+  }
+
+  // Create demo quiz
+  const demoQuiz: Quiz = {
+    id: 'quiz-1',
+    title: 'Web Development Basics Quiz',
+    description: 'Test your knowledge of HTML, CSS, and JavaScript',
+    materialId: 'material-1',
+    teacherId: 'teacher-1',
+    teacherName: 'Dr. Sarah Johnson',
+    questions: [
+      {
+        id: 'q1',
+        type: 'multiple-choice',
+        text: 'What does HTML stand for?',
+        options: [
+          'Hyper Text Markup Language',
+          'High Tech Modern Language',
+          'Hyper Transfer Markup Language',
+          'Home Tool Markup Language',
+        ],
+        correctAnswer: 'Hyper Text Markup Language',
+        points: 10,
+      },
+      {
+        id: 'q2',
+        type: 'multiple-choice',
+        text: 'Which CSS property is used to change text color?',
+        options: ['font-color', 'text-color', 'color', 'foreground-color'],
+        correctAnswer: 'color',
+        points: 10,
+      },
+      {
+        id: 'q3',
+        type: 'short-answer',
+        text: 'What keyword is used to declare a variable in JavaScript that cannot be reassigned?',
+        correctAnswer: 'const',
+        points: 15,
+      },
+    ],
+    timeLimit: 15,
+    createdAt: new Date().toISOString(),
+    isPublished: true,
+  };
+
+  await addItem('quizzes', demoQuiz);
+};
