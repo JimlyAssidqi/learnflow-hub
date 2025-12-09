@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, UserRole } from '@/types';
 import { initDB, getItemByIndex, addItem, getAllItems, seedDemoData } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
+import { loginUserApi, registerUserApi } from '@/api/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +24,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         await initDB();
         await seedDemoData();
-        
+
         // Check for stored session
         const storedUserId = localStorage.getItem('elearn_user_id');
         if (storedUserId) {
@@ -45,71 +46,76 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const foundUser = await getItemByIndex<User>('users', 'email', email.toLowerCase());
-      
-      if (foundUser) {
-        // In a real app, you'd verify the password hash
-        // For demo, we accept any password for demo accounts
-        setUser(foundUser);
-        localStorage.setItem('elearn_user_id', foundUser.id);
-        toast({
-          title: 'Welcome back!',
-          description: `Logged in as ${foundUser.name}`,
-        });
-        return true;
-      } else {
-        toast({
-          title: 'Login failed',
-          description: 'Invalid email or password',
-          variant: 'destructive',
-        });
-        return false;
-      }
+      // 🔥 PANGGIL API LOGIN
+      const result = await loginUserApi({
+        email: email.toLowerCase(),
+        password,
+      });
+
+      // ✅ Jika login sukses, API harus mengembalikan data user
+      const loggedInUser: User = {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        role: result.user.role,
+        createdAt: result.user.created_at,
+      };
+
+      // Simpan ke global state
+      setUser(loggedInUser);
+
+      // Simpan id user di localStorage agar tetap login
+      localStorage.setItem("elearn_user_id", loggedInUser.id);
+
+      toast({
+        title: "Welcome back!",
+        description: `Logged in as ${loggedInUser.name}`,
+      });
+
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        title: 'Error',
-        description: 'An error occurred during login',
-        variant: 'destructive',
+          title: 'Login failed',
+          description: 'Invalid email or password',
+          variant: 'destructive',
       });
       return false;
     }
   };
 
   const register = async (
-    email: string, 
-    password: string, 
-    name: string, 
+    email: string,
+    password: string,
+    name: string,
     role: UserRole
   ): Promise<boolean> => {
     try {
-      const existingUser = await getItemByIndex<User>('users', 'email', email.toLowerCase());
-      
-      if (existingUser) {
-        toast({
-          title: 'Registration failed',
-          description: 'Email already exists',
-          variant: 'destructive',
-        });
-        return false;
-      }
-
-      const newUser: User = {
-        id: `user-${Date.now()}`,
+      // CALL API REGISTER
+      const result = await registerUserApi({
         email: email.toLowerCase(),
+        password,
         name,
         role,
-        createdAt: new Date().toISOString(),
+      });
+
+      const newUser: User = {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        role: result.user.role,
+        createdAt: result.user.created_at,
       };
 
-      await addItem('users', newUser);
       setUser(newUser);
-      localStorage.setItem('elearn_user_id', newUser.id);
-      
+
+      localStorage.setItem("elearn_user_id", newUser.id);
+
       toast({
-        title: 'Welcome!',
-        description: 'Your account has been created successfully',
+        title: "Welcome!",
+        description: "Your account has been created successfully",
       });
+
       return true;
     } catch (error) {
       console.error('Registration error:', error);

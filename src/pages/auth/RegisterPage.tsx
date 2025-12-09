@@ -103,7 +103,7 @@ const RegisterPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-3">
+              {/* <div className="space-y-3">
                 <Label>I am a...</Label>
                 <RadioGroup
                   value={role}
@@ -131,7 +131,7 @@ const RegisterPage: React.FC = () => {
                     </Label>
                   </div>
                 </RadioGroup>
-              </div>
+              </div> */}
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
