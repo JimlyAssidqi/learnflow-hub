@@ -1,7 +1,7 @@
-import { User, Material, Quiz, QuizAttempt, ChatMessage, StudentProgress, OfflineMaterial } from '@/types';
+import { User, Material, Quiz, QuizAttempt, ChatMessage, StudentProgress, OfflineMaterial, Subject } from '@/types';
 
 const DB_NAME = 'elearning_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let db: IDBDatabase | null = null;
 
@@ -67,6 +67,11 @@ export const initDB = (): Promise<IDBDatabase> => {
       if (!database.objectStoreNames.contains('offlineMaterials')) {
         const offlineStore = database.createObjectStore('offlineMaterials', { keyPath: 'id' });
         offlineStore.createIndex('materialId', 'materialId', { unique: true });
+      }
+
+      // Subjects store
+      if (!database.objectStoreNames.contains('subjects')) {
+        database.createObjectStore('subjects', { keyPath: 'id' });
       }
     };
   });

@@ -29,6 +29,7 @@ import TeacherAnalytics from "./pages/teacher/TeacherAnalytics";
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSubjects from "./pages/admin/AdminSubjects";
 import AdminContent from "./pages/admin/AdminContent";
 import AdminSettings from "./pages/admin/AdminSettings";
 
@@ -110,6 +111,11 @@ const App = () => (
             <Route path="/admin/users" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminUsers />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/subjects" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminSubjects />
               </ProtectedRoute>
             } />
             <Route path="/admin/content" element={
