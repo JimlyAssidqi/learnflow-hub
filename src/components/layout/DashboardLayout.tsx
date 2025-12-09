@@ -24,7 +24,8 @@ import {
   Home,
   ClipboardList,
   Download,
-  Shield
+  Shield,
+  Library
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,6 +41,7 @@ const getNavItems = (role: string): NavItem[] => {
       return [
         { label: 'Dashboard', href: '/admin', icon: Home },
         { label: 'Users', href: '/admin/users', icon: Users },
+        { label: 'Mata Pelajaran', href: '/admin/subjects', icon: Library },
         { label: 'Content', href: '/admin/content', icon: FileText },
         { label: 'Settings', href: '/admin/settings', icon: Settings },
       ];

@@ -85,3 +85,9 @@ export interface OfflineMaterial {
   fileBlob: Blob;
   cachedAt: string;
 }
+
+export interface Subject {
+  id: string;
+  mata_pelajaran: string;
+  createdAt: string;
+}
