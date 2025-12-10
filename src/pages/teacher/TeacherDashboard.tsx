@@ -243,7 +243,7 @@ const TeacherDashboard: React.FC = () => {
                     <div>
                       <p className="font-medium text-sm">{material.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {material.type.toUpperCase()} • {material.downloadCount} downloads
+                        {(material.file_type || 'file').toUpperCase()} • {material.downloadCount} downloads
                       </p>
                     </div>
                   </div>

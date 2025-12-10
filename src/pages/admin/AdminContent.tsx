@@ -41,8 +41,8 @@ const AdminContent: React.FC = () => {
     loadData();
   }, []);
 
-  const deleteMaterial = async (id: string) => {
-    await deleteItem('materials', id);
+  const deleteMaterial = async (id: number) => {
+    await deleteItem('materials', String(id));
     setMaterials(prev => prev.filter(m => m.id !== id));
     toast({ title: 'Material deleted' });
   };
@@ -85,7 +85,7 @@ const AdminContent: React.FC = () => {
               <CardContent>
                 <div className="space-y-3">
                   {materials.map((material) => {
-                    const Icon = typeIcons[material.type];
+                    const Icon = typeIcons[material.file_type || 'pdf'];
                     return (
                       <div
                         key={material.id}
@@ -104,13 +104,13 @@ const AdminContent: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-3">
                           <Badge variant="secondary">
-                            {material.type.toUpperCase()}
+                            {(material.file_type || 'file').toUpperCase()}
                           </Badge>
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-destructive"
-                            onClick={() => deleteMaterial(material.id)}
+                            onClick={() => material.id && deleteMaterial(material.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

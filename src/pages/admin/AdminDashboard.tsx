@@ -216,9 +216,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <p className="text-3xl font-bold">{materials.length}</p>
                 <p className="text-sm text-muted-foreground">
-                  {materials.filter(m => m.type === 'pdf').length} PDFs, {' '}
-                  {materials.filter(m => m.type === 'ppt').length} PPTs, {' '}
-                  {materials.filter(m => m.type === 'video').length} Videos
+                  {materials.filter(m => m.file_type === 'pdf').length} PDFs, {' '}
+                  {materials.filter(m => m.file_type === 'ppt').length} PPTs, {' '}
+                  {materials.filter(m => m.file_type === 'video').length} Videos
                 </p>
               </div>
               <div className="p-4 rounded-lg bg-muted/50">
