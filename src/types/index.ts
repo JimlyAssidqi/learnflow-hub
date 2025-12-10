@@ -31,6 +31,8 @@ export interface Material {
   teacherName: string;
   createdAt: string;
   downloadCount: number;
+  subjectId?: string;
+  subjectName?: string;
 }
 
 export interface Quiz {
