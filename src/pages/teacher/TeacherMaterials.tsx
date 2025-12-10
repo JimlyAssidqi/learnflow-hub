@@ -21,7 +21,8 @@ import {
   Upload,
   Trash2,
   Download,
-  Library
+  Library,
+  ArrowLeft
 } from 'lucide-react';
 
 const typeIcons = {
@@ -35,33 +36,37 @@ const TeacherMaterials: React.FC = () => {
   const { toast } = useToast();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     type: 'pdf' as 'pdf' | 'ppt' | 'video',
-    subjectId: '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!user) return;
-      const [userMaterials, allSubjects] = await Promise.all([
-        getItemsByIndex<Material>('materials', 'teacherId', user.id),
-        getAllItems<Subject>('subjects')
-      ]);
-      setMaterials(userMaterials);
+    const loadSubjects = async () => {
+      const allSubjects = await getAllItems<Subject>('subjects');
       setSubjects(allSubjects);
     };
-    loadData();
-  }, [user]);
+    loadSubjects();
+  }, []);
+
+  useEffect(() => {
+    const loadMaterials = async () => {
+      if (!user || !selectedSubject) return;
+      const userMaterials = await getItemsByIndex<Material>('materials', 'teacherId', user.id);
+      const filteredMaterials = userMaterials.filter(m => m.subjectId === String(selectedSubject.id));
+      setMaterials(filteredMaterials);
+    };
+    loadMaterials();
+  }, [user, selectedSubject]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      // Auto-detect type from extension
       const ext = file.name.split('.').pop()?.toLowerCase();
       if (ext === 'pdf') setFormData(prev => ({ ...prev, type: 'pdf' }));
       else if (['ppt', 'pptx'].includes(ext || '')) setFormData(prev => ({ ...prev, type: 'ppt' }));
@@ -71,10 +76,8 @@ const TeacherMaterials: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !selectedFile || !formData.subjectId) return;
+    if (!user || !selectedFile || !selectedSubject) return;
 
-    const selectedSubject = subjects.find(s => String(s.id) === formData.subjectId);
-    
     const newMaterial: Material = {
       id: `material-${Date.now()}`,
       title: formData.title,
@@ -87,14 +90,14 @@ const TeacherMaterials: React.FC = () => {
       teacherName: user.name,
       createdAt: new Date().toISOString(),
       downloadCount: 0,
-      subjectId: formData.subjectId,
-      subjectName: selectedSubject?.mata_pelajaran || '',
+      subjectId: String(selectedSubject.id),
+      subjectName: selectedSubject.mata_pelajaran,
     };
 
     await addItem('materials', newMaterial);
     setMaterials(prev => [...prev, newMaterial]);
     setIsDialogOpen(false);
-    setFormData({ title: '', description: '', type: 'pdf', subjectId: '' });
+    setFormData({ title: '', description: '', type: 'pdf' });
     setSelectedFile(null);
 
     toast({
@@ -118,75 +121,120 @@ const TeacherMaterials: React.FC = () => {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  // Subject Selection View
+  if (!selectedSubject) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Learning Materials</h1>
+            <p className="text-muted-foreground mt-1">
+              Pilih mata pelajaran untuk mengelola materi
+            </p>
+          </div>
+
+          {subjects.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {subjects.map((subject) => (
+                <Card 
+                  key={subject.id} 
+                  className="glass glass-hover cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+                  onClick={() => setSelectedSubject(subject)}
+                >
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-xl bg-primary/10">
+                        <Library className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{subject.mata_pelajaran}</CardTitle>
+                        <CardDescription>Klik untuk kelola materi</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="glass">
+              <CardContent className="py-12">
+                <div className="text-center">
+                  <Library className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground">Belum ada mata pelajaran</h3>
+                  <p className="text-muted-foreground mt-1">
+                    Hubungi admin untuk menambahkan mata pelajaran.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Materials View for Selected Subject
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Learning Materials</h1>
-            <p className="text-muted-foreground mt-1">
-              Upload and manage your course materials
-            </p>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setSelectedSubject(null)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold text-foreground">{selectedSubject.mata_pelajaran}</h1>
+                <Badge variant="secondary">
+                  <Library className="h-3 w-3 mr-1" />
+                  Mata Pelajaran
+                </Badge>
+              </div>
+              <p className="text-muted-foreground mt-1">
+                Kelola materi untuk mata pelajaran ini
+              </p>
+            </div>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Upload Material
+                Upload Materi
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Upload New Material</DialogTitle>
+                <DialogTitle>Upload Materi Baru</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Mata Pelajaran</Label>
-                  <Select
-                    value={formData.subjectId}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, subjectId: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih mata pelajaran..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subjects.length > 0 ? (
-                        subjects.map((subject) => (
-                          <SelectItem key={subject.id} value={String(subject.id)}>
-                            {subject.mata_pelajaran}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="none" disabled>
-                          Belum ada mata pelajaran
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <p className="text-sm font-medium text-primary">
+                    Mata Pelajaran: {selectedSubject.mata_pelajaran}
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Judul Materi</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="e.g., Introduction to React"
+                    placeholder="Contoh: Pengenalan React"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Deskripsi</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Brief description of the material..."
+                    placeholder="Deskripsi singkat tentang materi..."
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="type">Material Type</Label>
+                  <Label htmlFor="type">Tipe Materi</Label>
                   <Select
                     value={formData.type}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as any }))}
@@ -214,16 +262,16 @@ const TeacherMaterials: React.FC = () => {
                     <label htmlFor="file" className="cursor-pointer">
                       <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-muted-foreground">
-                        {selectedFile ? selectedFile.name : 'Click to upload or drag and drop'}
+                        {selectedFile ? selectedFile.name : 'Klik untuk upload atau drag and drop'}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        PDF, PPT, or Video (max 50MB)
+                        PDF, PPT, atau Video (max 50MB)
                       </p>
                     </label>
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={!selectedFile || !formData.subjectId}>
-                  Upload Material
+                <Button type="submit" className="w-full" disabled={!selectedFile}>
+                  Upload Materi
                 </Button>
               </form>
             </DialogContent>
@@ -239,18 +287,10 @@ const TeacherMaterials: React.FC = () => {
                 <Card key={material.id} className="glass glass-hover">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
-                      <div className="flex gap-2 flex-wrap">
-                        <Badge variant="secondary">
-                          <Icon className="h-3 w-3 mr-1" />
-                          {material.type.toUpperCase()}
-                        </Badge>
-                        {material.subjectName && (
-                          <Badge variant="outline" className="text-primary border-primary">
-                            <Library className="h-3 w-3 mr-1" />
-                            {material.subjectName}
-                          </Badge>
-                        )}
-                      </div>
+                      <Badge variant="secondary">
+                        <Icon className="h-3 w-3 mr-1" />
+                        {material.type.toUpperCase()}
+                      </Badge>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -283,13 +323,13 @@ const TeacherMaterials: React.FC = () => {
             <CardContent className="py-12">
               <div className="text-center">
                 <BookOpen className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground">No materials yet</h3>
+                <h3 className="text-lg font-medium text-foreground">Belum ada materi</h3>
                 <p className="text-muted-foreground mt-1">
-                  Upload your first learning material to get started.
+                  Upload materi pertama untuk mata pelajaran ini.
                 </p>
                 <Button className="mt-4" onClick={() => setIsDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Upload Material
+                  Upload Materi
                 </Button>
               </div>
             </CardContent>
