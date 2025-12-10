@@ -224,7 +224,7 @@ const StudentDashboard: React.FC = () => {
                     <div>
                       <p className="font-medium text-sm">{material.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        by {material.teacherName} • {material.type.toUpperCase()}
+                        by {material.teacherName} • {(material.file_type || 'file').toUpperCase()}
                       </p>
                     </div>
                   </div>

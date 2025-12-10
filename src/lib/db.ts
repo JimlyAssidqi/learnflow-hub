@@ -78,7 +78,7 @@ export const initDB = (): Promise<IDBDatabase> => {
 };
 
 // Generic CRUD operations
-export const addItem = async <T extends { id: string }>(storeName: string, item: T): Promise<T> => {
+export const addItem = async <T extends { id?: string | number }>(storeName: string, item: T): Promise<T> => {
   const database = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(storeName, 'readwrite');
@@ -89,7 +89,7 @@ export const addItem = async <T extends { id: string }>(storeName: string, item:
   });
 };
 
-export const updateItem = async <T extends { id: string }>(storeName: string, item: T): Promise<T> => {
+export const updateItem = async <T extends { id?: string | number }>(storeName: string, item: T): Promise<T> => {
   const database = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(storeName, 'readwrite');
@@ -200,37 +200,39 @@ export const seedDemoData = async () => {
   }
 
   // Create demo materials
-  const demoMaterials: Material[] = [
+  const demoMaterials: Omit<Material, 'id'>[] = [
     {
-      id: 'material-1',
+      mata_pelajaran_id: 1,
+      teacher_id: 'teacher-1',
       title: 'Introduction to Web Development',
       description: 'Learn the fundamentals of HTML, CSS, and JavaScript',
-      type: 'pdf',
+      file_type: 'pdf',
+      file: 'web-dev-intro.pdf',
       fileName: 'web-dev-intro.pdf',
       fileSize: 2500000,
-      fileUrl: '',
-      teacherId: 'teacher-1',
+      file_url: '',
       teacherName: 'Dr. Sarah Johnson',
       createdAt: new Date().toISOString(),
       downloadCount: 45,
     },
     {
-      id: 'material-2',
+      mata_pelajaran_id: 1,
+      teacher_id: 'teacher-1',
       title: 'React Fundamentals',
       description: 'Master React components, hooks, and state management',
-      type: 'ppt',
+      file_type: 'ppt',
+      file: 'react-fundamentals.pptx',
       fileName: 'react-fundamentals.pptx',
       fileSize: 5000000,
-      teacherId: 'teacher-1',
+      file_url: '',
       teacherName: 'Dr. Sarah Johnson',
-      fileUrl: '',
       createdAt: new Date().toISOString(),
       downloadCount: 32,
     },
   ];
 
   for (const material of demoMaterials) {
-    await addItem('materials', material);
+    await addItem('materials', material as Material);
   }
 
   // Create demo quiz

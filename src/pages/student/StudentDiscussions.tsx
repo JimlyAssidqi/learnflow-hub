@@ -32,7 +32,7 @@ const StudentDiscussions: React.FC = () => {
       
       const materialParam = searchParams.get('material');
       if (materialParam) {
-        const found = allMaterials.find(m => m.id === materialParam);
+        const found = allMaterials.find(m => String(m.id) === materialParam);
         if (found) setSelectedMaterial(found);
       }
     };
@@ -45,7 +45,7 @@ const StudentDiscussions: React.FC = () => {
       const materialMessages = await getItemsByIndex<ChatMessage>(
         'chatMessages', 
         'materialId', 
-        selectedMaterial.id
+        String(selectedMaterial.id)
       );
       setMessages(materialMessages.sort((a, b) => 
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -65,7 +65,7 @@ const StudentDiscussions: React.FC = () => {
 
     const message: ChatMessage = {
       id: `msg-${Date.now()}`,
-      materialId: selectedMaterial.id,
+      materialId: String(selectedMaterial.id),
       userId: user.id,
       userName: user.name,
       userRole: user.role,
