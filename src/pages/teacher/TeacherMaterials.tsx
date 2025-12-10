@@ -12,18 +12,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getItemsByIndex, addItem, deleteItem, getAllItems } from '@/lib/db';
 import { Material, Subject } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  BookOpen, 
-  Plus, 
-  FileText, 
-  Presentation, 
+import {
+  BookOpen,
+  Plus,
+  FileText,
+  Presentation,
   Video,
   Upload,
   Trash2,
   Download,
   Library,
-  ArrowLeft
+  ArrowLeft,
+  FileType
 } from 'lucide-react';
+import { getMataPelajaranApi } from '@/api/mataPelajaran';
+import { getMateriByMataPelajaranApi, hapusMateriApi, tambahMateriApi } from '@/api/materi';
+import { Link } from 'react-router-dom';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const typeIcons = {
   pdf: FileText,
@@ -46,22 +52,23 @@ const TeacherMaterials: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
-    const loadSubjects = async () => {
-      const allSubjects = await getAllItems<Subject>('subjects');
-      setSubjects(allSubjects);
-    };
     loadSubjects();
   }, []);
+  
+  const loadSubjects = async () => {
+    const allSubjects = await getMataPelajaranApi();
+    setSubjects(allSubjects.data);
+  };
 
   useEffect(() => {
-    const loadMaterials = async () => {
-      if (!user || !selectedSubject) return;
-      const userMaterials = await getItemsByIndex<Material>('materials', 'teacherId', user.id);
-      const filteredMaterials = userMaterials.filter(m => m.subjectId === String(selectedSubject.id));
-      setMaterials(filteredMaterials);
-    };
     loadMaterials();
   }, [user, selectedSubject]);
+  
+  const loadMaterials = async () => {
+    if (!user || !selectedSubject) return;
+    const response = await getMateriByMataPelajaranApi(selectedSubject.id);
+    setMaterials(response.materi);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -78,37 +85,30 @@ const TeacherMaterials: React.FC = () => {
     e.preventDefault();
     if (!user || !selectedFile || !selectedSubject) return;
 
-    const newMaterial: Material = {
-      id: `material-${Date.now()}`,
-      title: formData.title,
-      description: formData.description,
-      type: formData.type,
-      fileName: selectedFile.name,
-      fileSize: selectedFile.size,
-      fileUrl: '',
-      teacherId: user.id,
-      teacherName: user.name,
-      createdAt: new Date().toISOString(),
-      downloadCount: 0,
-      subjectId: String(selectedSubject.id),
-      subjectName: selectedSubject.mata_pelajaran,
-    };
+    const formDataApi = new FormData();
+    formDataApi.append("mata_pelajaran_id", String(selectedSubject.id));
+    formDataApi.append("teacher_id", String(user.id));
+    formDataApi.append("title", formData.title);
+    formDataApi.append("description", formData.description);
+    formDataApi.append("file", selectedFile); // <--- PENTING: FILE ASLI, BUKAN NAMA FILE
 
-    await addItem('materials', newMaterial);
-    setMaterials(prev => [...prev, newMaterial]);
+    await tambahMateriApi(formDataApi);
+    loadMaterials();
+
     setIsDialogOpen(false);
-    setFormData({ title: '', description: '', type: 'pdf' });
+    setFormData({ title: "", description: "", type: "pdf" });
     setSelectedFile(null);
 
     toast({
-      title: 'Material uploaded!',
-      description: 'Students can now access this material.',
+      title: "Material uploaded!",
+      description: "Students can now access this material.",
     });
   };
 
-  const handleDelete = async (materialId: string) => {
-    await deleteItem('materials', materialId);
-    setMaterials(prev => prev.filter(m => m.id !== materialId));
+
+  const handleDelete = async (materialId: number) => {
+    await hapusMateriApi(materialId);
+    loadMaterials();
     toast({
       title: 'Material deleted',
       description: 'The material has been removed.',
@@ -136,8 +136,8 @@ const TeacherMaterials: React.FC = () => {
           {subjects.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {subjects.map((subject) => (
-                <Card 
-                  key={subject.id} 
+                <Card
+                  key={subject.id}
                   className="glass glass-hover cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
                   onClick={() => setSelectedSubject(subject)}
                 >
@@ -282,20 +282,20 @@ const TeacherMaterials: React.FC = () => {
         {materials.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {materials.map((material) => {
-              const Icon = typeIcons[material.type];
+              const Icon = typeIcons[material.file_type] ?? FileType; 
               return (
                 <Card key={material.id} className="glass glass-hover">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <Badge variant="secondary">
                         <Icon className="h-3 w-3 mr-1" />
-                        {material.type.toUpperCase()}
+                        {material.file_type.toUpperCase()}
                       </Badge>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                        onClick={() => handleDelete(material.id)}
+                      onClick={() => handleDelete(material.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -307,11 +307,16 @@ const TeacherMaterials: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Download className="h-4 w-4" />
-                        {material.downloadCount} downloads
-                      </span>
-                      <span>{formatFileSize(material.fileSize)}</span>
+                      <Link
+                        to={`${API_URL}/${material.file_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer">
+                          <span className="flex items-center gap-1">
+                            <Download className="h-4 w-4" />
+                            {material.downloadCount} downloads
+                          </span>
+                        </Link>
+                      {/* <span>{formatFileSize(material.fileSize)}</span> */}
                     </div>
                   </CardContent>
                 </Card>

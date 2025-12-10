@@ -7,7 +7,7 @@ interface MataPelajaranData {
 
 export const tambahMataPelajaranApi = async (data: MataPelajaranData) => {
   try {
-    const response = await axios.post(`${API_URL}/mata-pelajaran`, data);
+    const response = await axios.post(`${API_URL}/api/mata-pelajaran`, data);
     return response.data;
   } catch (error) {
     return error.response.data;
@@ -16,7 +16,7 @@ export const tambahMataPelajaranApi = async (data: MataPelajaranData) => {
 
 export const ubahMataPelajaranApi = async (id: number, data: MataPelajaranData) => {
   try {
-    const response = await axios.put(`${API_URL}/mata-pelajaran/${id}`, data);
+    const response = await axios.put(`${API_URL}/api/mata-pelajaran/${id}`, data);
     return response.data;
   } catch (error) {
     return error.response.data;
@@ -25,7 +25,7 @@ export const ubahMataPelajaranApi = async (id: number, data: MataPelajaranData) 
 
 export const hapusMataPelajaranApi = async (id: number) => {
   try {
-    const response = await axios.delete(`${API_URL}/mata-pelajaran/${id}`);
+    const response = await axios.delete(`${API_URL}/api/mata-pelajaran/${id}`);
     return response.data;
   } catch (error) {
     return error.response.data;
@@ -34,7 +34,7 @@ export const hapusMataPelajaranApi = async (id: number) => {
 
 export const getMataPelajaranApi = async () => {
   try {
-    const response = await axios.get(`${API_URL}/mata-pelajaran`);
+    const response = await axios.get(`${API_URL}/api/mata-pelajaran`);
     return response.data;
   } catch (error) {
     return error.response.data;

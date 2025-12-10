@@ -20,20 +20,23 @@ export interface UserForAdmin {
 }
 
 export interface Material {
-  id: string;
+  id?: number;
+  mata_pelajaran_id: number;
+  teacher_id: string | number;
   title: string;
   description: string;
-  type: 'pdf' | 'ppt' | 'video';
-  fileName: string;
-  fileSize: number;
-  fileUrl: string;
-  teacherId: string;
-  teacherName: string;
-  createdAt: string;
-  downloadCount: number;
+  file: string; // saat GET: url/path file
+  file_type?: 'pdf' | 'ppt' | 'video';
+  fileName?: string;
+  fileSize?: number;
+  file_url?: string;
+  teacherName?: string;
+  createdAt?: string;
+  downloadCount?: number;
   subjectId?: string;
   subjectName?: string;
 }
+
 
 export interface Quiz {
   id: string;

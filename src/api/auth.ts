@@ -15,7 +15,7 @@ interface RegisterData {
 
 export const registerUserApi = async (data: RegisterData) => {
   try {
-    const response = await axios.post(`${API_URL}/users/register`, data);
+    const response = await axios.post(`${API_URL}/api/users/register`, data);
     return response.data;
   } catch (error) {
     return error.response.data;
@@ -24,7 +24,7 @@ export const registerUserApi = async (data: RegisterData) => {
 
 export const loginUserApi = async (data: LoginiData) => {
   try {
-    const response = await axios.post(`${API_URL}/users/login`, data);
+    const response = await axios.post(`${API_URL}/api/users/login`, data);
     return response.data;
   } catch (error) {
     return error.response.data;
