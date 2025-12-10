@@ -33,6 +33,7 @@ import { Plus, Pencil, Trash2, Library } from 'lucide-react';
 import { getAllItems, addItem, updateItem, deleteItem } from '@/lib/db';
 import { Subject } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { getMataPelajaranApi, hapusMataPelajaranApi, tambahMataPelajaranApi, ubahMataPelajaranApi } from '@/api/mataPelajaran';
 
 const AdminSubjects = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -50,8 +51,28 @@ const AdminSubjects = () => {
 
   const loadSubjects = async () => {
     try {
-      const data = await getAllItems<Subject>('subjects');
-      setSubjects(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      const result = await getMataPelajaranApi();
+
+      // Jika API gagal
+      if (!result || !result.data) {
+        console.error("API Error:", result?.message);
+        return;
+      }
+
+      // 🔥 Mapping data API → format Subject lokal
+      const mappedSubjects: Subject[] = result.data.map((item: any) => ({
+        id: item.id,
+        mata_pelajaran: item.mata_pelajaran,
+        createdAt: item.created_at, // backend pakai created_at
+      }));
+
+      // 🔥 Sort dari terbaru → terlama
+      const sorted = mappedSubjects.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      setSubjects(sorted);
     } catch (error) {
       console.error('Error loading subjects:', error);
     } finally {
@@ -78,7 +99,7 @@ const AdminSubjects = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.mata_pelajaran.trim()) {
       toast({
         title: 'Error',
@@ -90,25 +111,26 @@ const AdminSubjects = () => {
 
     try {
       if (editingSubject) {
-        const updated: Subject = {
-          ...editingSubject,
-          mata_pelajaran: formData.mata_pelajaran.trim(),
-        };
-        await updateItem('subjects', updated);
-        toast({
-          title: 'Berhasil',
-          description: 'Mata pelajaran berhasil diperbarui',
-        });
+        const result = await ubahMataPelajaranApi(
+          editingSubject.id,
+          { mata_pelajaran: formData.mata_pelajaran.trim() }
+        );
+        loadSubjects();
+        if (result?.message) {
+          toast({
+            title: 'Berhasil',
+            description: 'Mata pelajaran berhasil diperbarui',
+          });
+        }
       } else {
-        const newSubject: Subject = {
-          id: `subject-${Date.now()}`,
+        // 🔥 TAMBAH MATA PELAJARAN MENGGUNAKAN API
+        const result = await tambahMataPelajaranApi({
           mata_pelajaran: formData.mata_pelajaran.trim(),
-          createdAt: new Date().toISOString(),
-        };
-        await addItem('subjects', newSubject);
+        });
+
         toast({
-          title: 'Berhasil',
-          description: 'Mata pelajaran berhasil ditambahkan',
+          title: "Berhasil",
+          description: "Mata pelajaran berhasil ditambahkan",
         });
       }
       handleCloseDialog();
@@ -132,7 +154,10 @@ const AdminSubjects = () => {
     if (!subjectToDelete) return;
 
     try {
-      await deleteItem('subjects', subjectToDelete.id);
+      // await deleteItem('subjects', subjectToDelete.id);
+      const result = await hapusMataPelajaranApi(
+        subjectToDelete.id
+      );
       toast({
         title: 'Berhasil',
         description: 'Mata pelajaran berhasil dihapus',
@@ -267,7 +292,7 @@ const AdminSubjects = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Hapus Mata Pelajaran</AlertDialogTitle>
             <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus mata pelajaran "{subjectToDelete?.mata_pelajaran}"? 
+              Apakah Anda yakin ingin menghapus mata pelajaran "{subjectToDelete?.mata_pelajaran}"?
               Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>

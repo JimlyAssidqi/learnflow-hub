@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Award
 } from 'lucide-react';
+import { getUserStudentApi } from '@/api/user';
 
 const TeacherStudents: React.FC = () => {
   const { user } = useAuth();
@@ -24,13 +25,12 @@ const TeacherStudents: React.FC = () => {
     const loadData = async () => {
       if (!user) return;
       
-      const [allUsers, teacherQuizzes, allAttempts] = await Promise.all([
-        getAllItems<User>('users'),
+      const [studentResponse, teacherQuizzes, allAttempts] = await Promise.all([
+        getUserStudentApi(),
         getItemsByIndex<Quiz>('quizzes', 'teacherId', user.id),
         getAllItems<QuizAttempt>('quizAttempts'),
       ]);
-
-      setStudents(allUsers.filter(u => u.role === 'student'));
+      setStudents(studentResponse.students || studentResponse); 
       setQuizzes(teacherQuizzes);
       
       const quizIds = teacherQuizzes.map(q => q.id);

@@ -1,16 +1,16 @@
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 
+interface LoginiData {
+  email: string;
+  password: string;
+}
+
 interface RegisterData {
   name: string;
   email: string;
   password: string;
   role: string;
-}
-
-interface LoginiData {
-  email: string;
-  password: string;
 }
 
 export const registerUserApi = async (data: RegisterData) => {

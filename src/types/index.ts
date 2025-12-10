@@ -9,6 +9,16 @@ export interface User {
   createdAt: string;
 }
 
+export interface UserForAdmin {
+  id: number;
+  email: string;
+  name: string;
+  password: string;
+  role: UserRole;
+  avatar?: string;
+  createdAt: string;
+}
+
 export interface Material {
   id: string;
   title: string;
@@ -87,7 +97,7 @@ export interface OfflineMaterial {
 }
 
 export interface Subject {
-  id: string;
+  id: number;
   mata_pelajaran: string;
   createdAt: string;
 }

@@ -3,6 +3,8 @@ import { User, UserRole } from '@/types';
 import { initDB, getItemByIndex, addItem, getAllItems, seedDemoData } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
 import { loginUserApi, registerUserApi } from '@/api/auth';
+import { getUserApi, getUserByIdApi } from '@/api/user';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -18,21 +20,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        await initDB();
-        await seedDemoData();
-
         // Check for stored session
         const storedUserId = localStorage.getItem('elearn_user_id');
-        if (storedUserId) {
-          const users = await getAllItems<User>('users');
-          const foundUser = users.find(u => u.id === storedUserId);
-          if (foundUser) {
-            setUser(foundUser);
-          }
+        if (!storedUserId) {
+          setIsLoading(false);
+          return;
+        }
+        const userResponse = await getUserByIdApi(storedUserId);
+        const foundUser = userResponse.user;
+        if (foundUser) {
+          setUser(foundUser);
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
@@ -76,9 +78,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Login error:', error);
       toast({
-          title: 'Login failed',
-          description: 'Invalid email or password',
-          variant: 'destructive',
+        title: 'Login failed',
+        description: 'Invalid email or password',
+        variant: 'destructive',
       });
       return false;
     }

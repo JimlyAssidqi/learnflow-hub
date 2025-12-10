@@ -9,15 +9,17 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getAllItems, addItem, updateItem, deleteItem } from '@/lib/db';
-import { User, UserRole } from '@/types';
+import { User, UserForAdmin, UserRole } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Users, 
-  Plus, 
+import {
+  Users,
+  Plus,
   Edit,
   Trash2,
   Search
 } from 'lucide-react';
+import { getUserApi, hapusUserApi, ubahUserApi } from '@/api/user';
+import { registerUserApi } from '@/api/auth';
 
 const roleColors = {
   admin: 'bg-destructive text-destructive-foreground',
@@ -27,23 +29,32 @@ const roleColors = {
 
 const AdminUsers: React.FC = () => {
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserForAdmin[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserForAdmin | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'student' as UserRole,
   });
 
   useEffect(() => {
-    const loadUsers = async () => {
-      const allUsers = await getAllItems<User>('users');
-      setUsers(allUsers);
-    };
     loadUsers();
   }, []);
+
+  const loadUsers = async () => {
+    const allUsers = await getUserApi();
+    const formattedUsers: UserForAdmin[] = allUsers.users.map((u: any) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      createdAt: u.created_at,
+    }));
+    setUsers(formattedUsers);
+  };
 
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,43 +62,94 @@ const AdminUsers: React.FC = () => {
   );
 
   const resetForm = () => {
-    setFormData({ name: '', email: '', role: 'student' });
+    setFormData({ name: '', email: '', password: '', role: 'student' });
     setEditingUser(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (editingUser) {
-      const updated = { ...editingUser, ...formData };
-      await updateItem('users', updated);
-      setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
-      toast({ title: 'User updated successfully' });
-    } else {
-      const newUser: User = {
-        id: `user-${Date.now()}`,
-        ...formData,
-        email: formData.email.toLowerCase(),
-        createdAt: new Date().toISOString(),
-      };
-      await addItem('users', newUser);
-      setUsers(prev => [...prev, newUser]);
-      toast({ title: 'User created successfully' });
-    }
+    try {
+      if (editingUser) {
+        // ========== UPDATE USER (opsional, backend belum ada) ==========
+        const result = await ubahUserApi(editingUser.id, {
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password.trim(),  // jika API tidak perlu password, hapus baris ini
+          role: formData.role,
+        });
+        if (result?.message || result?.user) {
+          toast({
+            title: "User updated successfully",
+            description: editingUser.email,
+          });
 
-    setIsDialogOpen(false);
-    resetForm();
+          // Reload users from backend
+          const allUsers = await getUserApi();
+          const formatted = allUsers.users.map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            createdAt: u.created_at,
+          }));
+          setUsers(formatted);
+        } else {
+          toast({
+            title: "Failed to update user",
+            description: result?.error || "Unknown error",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // ========== REGISTER USER ==========
+        const result = await registerUserApi({
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password.trim(),
+          role: formData.role,
+        });
+
+        if (result?.message || result?.user) {
+          toast({
+            title: "User registered successfully",
+            description: formData.email,
+          });
+
+          // Reload users from backend
+          const allUsers = await getUserApi();
+          setUsers(allUsers.users);
+        } else {
+          toast({
+            title: "Failed to create user",
+            description: result?.error || "Unknown error",
+            variant: "destructive",
+          });
+        }
+      }
+
+      setIsDialogOpen(false);
+      resetForm();
+
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong during registration",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEdit = (user: User) => {
+
+  const handleEdit = (user: UserForAdmin) => {
     setEditingUser(user);
-    setFormData({ name: user.name, email: user.email, role: user.role });
+    setFormData({ name: user.name, email: user.email, password: user.password, role: user.role });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (userId: string) => {
-    await deleteItem('users', userId);
-    setUsers(prev => prev.filter(u => u.id !== userId));
+  const handleDelete = async (userId: number) => {
+    await hapusUserApi(userId);
+    loadUsers();
     toast({ title: 'User deleted successfully' });
   };
 
@@ -134,6 +196,17 @@ const AdminUsers: React.FC = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="john@example.com"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     placeholder="john@example.com"
                     required
                   />
