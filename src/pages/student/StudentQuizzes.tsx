@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { getAllItems, getItemsByIndex, addItem } from '@/lib/db';
@@ -20,15 +19,18 @@ import {
   Play,
   Trophy,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  BookOpen
 } from 'lucide-react';
 
 const StudentQuizzes: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showResults, setShowResults] = useState(false);
@@ -37,22 +39,38 @@ const StudentQuizzes: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
-      const [allQuizzes, userAttempts] = await Promise.all([
+      const [allQuizzes, allQuestions, userAttempts] = await Promise.all([
         getAllItems<Quiz>('quizzes'),
+        getAllItems<Question>('questions'),
         getItemsByIndex<QuizAttempt>('quizAttempts', 'studentId', user.id),
       ]);
       setQuizzes(allQuizzes.filter(q => q.isPublished));
+      setQuestions(allQuestions);
       setAttempts(userAttempts);
     };
     loadData();
   }, [user]);
+
+  const getQuestionsForQuiz = (quizId: string) => {
+    return questions.filter(q => q.id_kuis === quizId);
+  };
 
   const getAttemptForQuiz = (quizId: string) => {
     return attempts.find(a => a.quizId === quizId);
   };
 
   const startQuiz = (quiz: Quiz) => {
+    const quizQuestions = getQuestionsForQuiz(quiz.id);
+    if (quizQuestions.length === 0) {
+      toast({
+        title: 'Kuis belum memiliki soal',
+        description: 'Kuis ini belum memiliki soal yang bisa dikerjakan.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setActiveQuiz(quiz);
+    setActiveQuestions(quizQuestions);
     setCurrentQuestionIndex(0);
     setAnswers({});
     setShowResults(false);
@@ -64,7 +82,7 @@ const StudentQuizzes: React.FC = () => {
   };
 
   const nextQuestion = () => {
-    if (activeQuiz && currentQuestionIndex < activeQuiz.questions.length - 1) {
+    if (currentQuestionIndex < activeQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     }
   };
@@ -81,17 +99,16 @@ const StudentQuizzes: React.FC = () => {
     let score = 0;
     let totalPoints = 0;
 
-    activeQuiz.questions.forEach(question => {
-      totalPoints += question.points;
-      const userAnswer = answers[question.id]?.trim().toLowerCase();
-      const correctAnswer = question.correctAnswer.trim().toLowerCase();
+    activeQuestions.forEach(question => {
+      totalPoints += question.skor;
+      const userAnswer = answers[question.id];
       
-      if (userAnswer === correctAnswer) {
-        score += question.points;
+      if (userAnswer === question.jawaban_benar) {
+        score += question.skor;
       }
     });
 
-    const percentage = Math.round((score / totalPoints) * 100);
+    const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
 
     const attempt: QuizAttempt = {
       id: `attempt-${Date.now()}`,
@@ -114,18 +131,29 @@ const StudentQuizzes: React.FC = () => {
     setShowResults(true);
 
     toast({
-      title: 'Quiz submitted!',
-      description: `You scored ${percentage}%`,
+      title: 'Kuis selesai!',
+      description: `Skor Anda: ${percentage}%`,
     });
   };
 
   const closeQuiz = () => {
     setActiveQuiz(null);
+    setActiveQuestions([]);
     setShowResults(false);
     setLastAttempt(null);
   };
 
-  const currentQuestion = activeQuiz?.questions[currentQuestionIndex];
+  const currentQuestion = activeQuestions[currentQuestionIndex];
+
+  const getOptionByKey = (question: Question, key: string) => {
+    switch (key) {
+      case 'A': return question.opsi_a;
+      case 'B': return question.opsi_b;
+      case 'C': return question.opsi_c;
+      case 'D': return question.opsi_d;
+      default: return '';
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -139,13 +167,14 @@ const StudentQuizzes: React.FC = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {quizzes.map((quiz) => {
             const attempt = getAttemptForQuiz(quiz.id);
+            const quizQuestions = getQuestionsForQuiz(quiz.id);
             
             return (
               <Card key={quiz.id} className="glass glass-hover">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <Badge variant="secondary">
-                      {quiz.questions.length} Questions
+                      {quizQuestions.length} Soal
                     </Badge>
                     {attempt && (
                       <Badge className={`${
@@ -157,9 +186,10 @@ const StudentQuizzes: React.FC = () => {
                       </Badge>
                     )}
                   </div>
-                  <CardTitle className="text-lg mt-2">{quiz.title}</CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {quiz.description}
+                  <CardTitle className="text-lg mt-2">{quiz.judul_kuis}</CardTitle>
+                  <CardDescription className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    {quiz.subjectName}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -167,23 +197,24 @@ const StudentQuizzes: React.FC = () => {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        {quiz.timeLimit || 15} min
+                        {quiz.timeLimit || 15} menit
                       </span>
-                      <span>by {quiz.teacherName}</span>
+                      <span>oleh {quiz.teacherName}</span>
                     </div>
                     <Button
                       className="w-full"
                       onClick={() => startQuiz(quiz)}
+                      disabled={quizQuestions.length === 0}
                     >
                       {attempt ? (
                         <>
                           <Trophy className="h-4 w-4 mr-2" />
-                          Retake Quiz
+                          Kerjakan Ulang
                         </>
                       ) : (
                         <>
                           <Play className="h-4 w-4 mr-2" />
-                          Start Quiz
+                          Mulai Kuis
                         </>
                       )}
                     </Button>
@@ -197,9 +228,9 @@ const StudentQuizzes: React.FC = () => {
         {quizzes.length === 0 && (
           <div className="text-center py-12">
             <ClipboardList className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground">No quizzes available</h3>
+            <h3 className="text-lg font-medium text-foreground">Tidak ada kuis tersedia</h3>
             <p className="text-muted-foreground mt-1">
-              Check back later for new quizzes
+              Periksa kembali nanti untuk kuis baru
             </p>
           </div>
         )}
@@ -210,46 +241,37 @@ const StudentQuizzes: React.FC = () => {
             {!showResults && activeQuiz && currentQuestion && (
               <>
                 <DialogHeader>
-                  <DialogTitle>{activeQuiz.title}</DialogTitle>
+                  <DialogTitle>{activeQuiz.judul_kuis}</DialogTitle>
                   <DialogDescription>
-                    Question {currentQuestionIndex + 1} of {activeQuiz.questions.length}
+                    Soal {currentQuestionIndex + 1} dari {activeQuestions.length}
                   </DialogDescription>
                 </DialogHeader>
                 
                 <Progress 
-                  value={(currentQuestionIndex + 1) / activeQuiz.questions.length * 100} 
+                  value={(currentQuestionIndex + 1) / activeQuestions.length * 100} 
                   className="h-2"
                 />
 
                 <div className="py-6">
-                  <p className="text-lg font-medium mb-4">{currentQuestion.text}</p>
+                  <p className="text-lg font-medium mb-4">{currentQuestion.pertanyaan}</p>
                   <Badge variant="outline" className="mb-4">
-                    {currentQuestion.points} points
+                    {currentQuestion.skor} poin
                   </Badge>
 
-                  {currentQuestion.type === 'multiple-choice' ? (
-                    <RadioGroup
-                      value={answers[currentQuestion.id] || ''}
-                      onValueChange={(value) => handleAnswer(currentQuestion.id, value)}
-                      className="space-y-3"
-                    >
-                      {currentQuestion.options?.map((option, idx) => (
-                        <div key={idx} className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                          <RadioGroupItem value={option} id={`option-${idx}`} />
-                          <Label htmlFor={`option-${idx}`} className="cursor-pointer flex-1">
-                            {option}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  ) : (
-                    <Input
-                      placeholder="Type your answer..."
-                      value={answers[currentQuestion.id] || ''}
-                      onChange={(e) => handleAnswer(currentQuestion.id, e.target.value)}
-                      className="mt-2"
-                    />
-                  )}
+                  <RadioGroup
+                    value={answers[currentQuestion.id] || ''}
+                    onValueChange={(value) => handleAnswer(currentQuestion.id, value)}
+                    className="space-y-3"
+                  >
+                    {(['A', 'B', 'C', 'D'] as const).map((key) => (
+                      <div key={key} className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                        <RadioGroupItem value={key} id={`option-${key}`} />
+                        <Label htmlFor={`option-${key}`} className="cursor-pointer flex-1">
+                          {key}. {getOptionByKey(currentQuestion, key)}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
 
                 <div className="flex justify-between">
@@ -259,17 +281,17 @@ const StudentQuizzes: React.FC = () => {
                     disabled={currentQuestionIndex === 0}
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Previous
+                    Sebelumnya
                   </Button>
                   
-                  {currentQuestionIndex === activeQuiz.questions.length - 1 ? (
+                  {currentQuestionIndex === activeQuestions.length - 1 ? (
                     <Button onClick={submitQuiz}>
-                      Submit Quiz
+                      Selesai
                       <CheckCircle2 className="h-4 w-4 ml-2" />
                     </Button>
                   ) : (
                     <Button onClick={nextQuestion}>
-                      Next
+                      Selanjutnya
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   )}
@@ -282,7 +304,7 @@ const StudentQuizzes: React.FC = () => {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Trophy className="h-6 w-6 text-accent" />
-                    Quiz Complete!
+                    Kuis Selesai!
                   </DialogTitle>
                 </DialogHeader>
 
@@ -295,15 +317,15 @@ const StudentQuizzes: React.FC = () => {
                     {lastAttempt.percentage}%
                   </div>
                   <p className="text-muted-foreground">
-                    You scored {lastAttempt.score} out of {lastAttempt.totalPoints} points
+                    Skor Anda {lastAttempt.score} dari {lastAttempt.totalPoints} poin
                   </p>
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="font-medium">Review Answers:</h4>
-                  {activeQuiz.questions.map((q, idx) => {
-                    const userAnswer = answers[q.id]?.trim().toLowerCase();
-                    const isCorrect = userAnswer === q.correctAnswer.trim().toLowerCase();
+                  <h4 className="font-medium">Review Jawaban:</h4>
+                  {activeQuestions.map((q, idx) => {
+                    const userAnswer = answers[q.id];
+                    const isCorrect = userAnswer === q.jawaban_benar;
                     
                     return (
                       <div key={q.id} className={`p-3 rounded-lg border ${
@@ -316,13 +338,13 @@ const StudentQuizzes: React.FC = () => {
                             <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                           )}
                           <div>
-                            <p className="text-sm font-medium">Q{idx + 1}: {q.text}</p>
+                            <p className="text-sm font-medium">Q{idx + 1}: {q.pertanyaan}</p>
                             <p className="text-sm text-muted-foreground mt-1">
-                              Your answer: {answers[q.id] || '(no answer)'}
+                              Jawaban Anda: {userAnswer ? `${userAnswer}. ${getOptionByKey(q, userAnswer)}` : '(tidak dijawab)'}
                             </p>
                             {!isCorrect && (
                               <p className="text-sm text-success mt-1">
-                                Correct: {q.correctAnswer}
+                                Jawaban Benar: {q.jawaban_benar}. {getOptionByKey(q, q.jawaban_benar)}
                               </p>
                             )}
                           </div>
@@ -333,7 +355,7 @@ const StudentQuizzes: React.FC = () => {
                 </div>
 
                 <Button className="w-full mt-4" onClick={closeQuiz}>
-                  Close
+                  Tutup
                 </Button>
               </>
             )}

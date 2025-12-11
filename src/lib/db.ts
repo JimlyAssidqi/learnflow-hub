@@ -40,8 +40,14 @@ export const initDB = (): Promise<IDBDatabase> => {
       // Quizzes store
       if (!database.objectStoreNames.contains('quizzes')) {
         const quizzesStore = database.createObjectStore('quizzes', { keyPath: 'id' });
-        quizzesStore.createIndex('teacherId', 'teacherId', { unique: false });
-        quizzesStore.createIndex('materialId', 'materialId', { unique: false });
+        quizzesStore.createIndex('teacherId', 'id_guru', { unique: false });
+        quizzesStore.createIndex('subjectId', 'id_matapelajaran', { unique: false });
+      }
+
+      // Questions store
+      if (!database.objectStoreNames.contains('questions')) {
+        const questionsStore = database.createObjectStore('questions', { keyPath: 'id' });
+        questionsStore.createIndex('quizId', 'id_kuis', { unique: false });
       }
 
       // Quiz attempts store
@@ -238,41 +244,11 @@ export const seedDemoData = async () => {
   // Create demo quiz
   const demoQuiz: Quiz = {
     id: 'quiz-1',
-    title: 'Web Development Basics Quiz',
-    description: 'Test your knowledge of HTML, CSS, and JavaScript',
-    materialId: 'material-1',
-    teacherId: 'teacher-1',
+    id_guru: 'teacher-1',
+    id_matapelajaran: 1,
+    judul_kuis: 'Web Development Basics Quiz',
     teacherName: 'Dr. Sarah Johnson',
-    questions: [
-      {
-        id: 'q1',
-        type: 'multiple-choice',
-        text: 'What does HTML stand for?',
-        options: [
-          'Hyper Text Markup Language',
-          'High Tech Modern Language',
-          'Hyper Transfer Markup Language',
-          'Home Tool Markup Language',
-        ],
-        correctAnswer: 'Hyper Text Markup Language',
-        points: 10,
-      },
-      {
-        id: 'q2',
-        type: 'multiple-choice',
-        text: 'Which CSS property is used to change text color?',
-        options: ['font-color', 'text-color', 'color', 'foreground-color'],
-        correctAnswer: 'color',
-        points: 10,
-      },
-      {
-        id: 'q3',
-        type: 'short-answer',
-        text: 'What keyword is used to declare a variable in JavaScript that cannot be reassigned?',
-        correctAnswer: 'const',
-        points: 15,
-      },
-    ],
+    subjectName: 'Matematika',
     timeLimit: 15,
     createdAt: new Date().toISOString(),
     isPublished: true,
