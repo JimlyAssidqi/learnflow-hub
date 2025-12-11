@@ -33,6 +33,24 @@ export const getMateriByMataPelajaranApi = async (id: number) => {
   }
 }
 
+export const getMateriByGuruApi = async (id: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/materi/teacher/${id}`);
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+}
+
+export const getMateriByGuruAndMapelApi = async (idTeacher: string, idMapel: number) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/materi/teacher/${idTeacher}/mapel/${idMapel}`);
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+}
+
 export const hapusMateriApi = async (id: number) => {
   try {
     const response = await axios.delete(`${API_URL}/api/materi/${id}`);

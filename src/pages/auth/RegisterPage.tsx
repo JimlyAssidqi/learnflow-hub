@@ -43,25 +43,25 @@ const RegisterPage: React.FC = () => {
             <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-glow">
               <GraduationCap className="h-7 w-7 text-primary-foreground" />
             </div>
-            <span className="font-outfit text-2xl font-bold text-foreground">EduLearn</span>
+            {/* <span className="font-outfit text-2xl font-bold text-foreground">EduLearn</span> */}
           </Link>
         </div>
 
         <Card className="glass border-border/50">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Create an account</CardTitle>
-            <CardDescription>Start your learning journey today</CardDescription>
+            <CardTitle className="text-2xl">Buat Akun</CardTitle>
+            <CardDescription>Mulailah perjalanan belajar Anda hari ini</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">Nama Lenngkap</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Masukan nama lengkap anda"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="pl-10"
@@ -77,7 +77,7 @@ const RegisterPage: React.FC = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="you@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -133,20 +133,15 @@ const RegisterPage: React.FC = () => {
                 </RadioGroup>
               </div> */}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <LoadingSpinner size="sm" className="mr-2" />
-                ) : (
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                )}
-                Create Account
+              <Button type="submit" className="w-full  bg-blue-600 hover:bg-blue-600" disabled={isLoading}>
+                Daftar
               </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
+              Sudah punya akun?{' '}
               <Link to="/login" className="text-primary hover:underline font-medium">
-                Sign in
+                Masuk
               </Link>
             </p>
           </CardContent>

@@ -26,7 +26,7 @@ import {
   FileType
 } from 'lucide-react';
 import { getMataPelajaranApi } from '@/api/mataPelajaran';
-import { getMateriByMataPelajaranApi, hapusMateriApi, tambahMateriApi } from '@/api/materi';
+import { getMateriByGuruAndMapelApi, getMateriByMataPelajaranApi, hapusMateriApi, tambahMateriApi } from '@/api/materi';
 import { Link } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -66,7 +66,8 @@ const TeacherMaterials: React.FC = () => {
   
   const loadMaterials = async () => {
     if (!user || !selectedSubject) return;
-    const response = await getMateriByMataPelajaranApi(selectedSubject.id);
+    // const response = await getMateriByMataPelajaranApi(selectedSubject.id);
+    const response = await getMateriByGuruAndMapelApi(user.id, selectedSubject.id);
     setMaterials(response.materi);
   };
 

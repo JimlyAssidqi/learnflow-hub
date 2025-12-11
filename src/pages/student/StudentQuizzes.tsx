@@ -132,10 +132,7 @@ const StudentQuizzes: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Quizzes</h1>
-          <p className="text-muted-foreground mt-1">
-            Test your knowledge with interactive quizzes
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">Kuis</h1>
         </div>
 
         {/* Quizzes Grid */}

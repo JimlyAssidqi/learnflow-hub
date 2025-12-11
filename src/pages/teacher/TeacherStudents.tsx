@@ -58,9 +58,9 @@ const TeacherStudents: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Student Progress</h1>
+          <h1 className="text-3xl font-bold text-foreground">Daftar Siswa</h1>
           <p className="text-muted-foreground mt-1">
-            Track and monitor your students' learning journey
+            
           </p>
         </div>
 
@@ -75,51 +75,6 @@ const TeacherStudents: React.FC = () => {
                 <div>
                   <p className="text-2xl font-bold">{students.length}</p>
                   <p className="text-xs text-muted-foreground">Total Students</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="glass">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-success/10">
-                  <GraduationCap className="h-5 w-5 text-success" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{attempts.length}</p>
-                  <p className="text-xs text-muted-foreground">Quiz Attempts</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="glass">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-accent/10">
-                  <TrendingUp className="h-5 w-5 text-accent" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {attempts.length > 0 
-                      ? Math.round(attempts.reduce((a, b) => a + b.percentage, 0) / attempts.length)
-                      : 0}%
-                  </p>
-                  <p className="text-xs text-muted-foreground">Avg Score</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="glass">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-info/10">
-                  <Award className="h-5 w-5 text-info" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {attempts.filter(a => a.percentage >= 70).length}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Passing Scores</p>
                 </div>
               </div>
             </CardContent>

@@ -64,14 +64,14 @@ const LoginPage: React.FC = () => {
             <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-glow">
               <GraduationCap className="h-7 w-7 text-primary-foreground" />
             </div>
-            <span className="font-outfit text-2xl font-bold text-foreground">EduLearn</span>
+            {/* <span className="font-outfit text-2xl font-bold text-foreground">EduLearn</span> */}
           </Link>
         </div>
 
         <Card className="glass border-border/50">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <CardDescription>Sign in to continue your learning journey</CardDescription>
+            <CardTitle className="text-2xl">Selamat Datang</CardTitle>
+            <CardDescription>Masuk untuk melanjutkan perjalanan pembelajaran Anda</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,7 +82,7 @@ const LoginPage: React.FC = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="you@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -107,17 +107,17 @@ const LoginPage: React.FC = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-600" disabled={isLoading}>
+                {/* {isLoading ? (
                   <LoadingSpinner size="sm" className="mr-2" />
                 ) : (
                   <ArrowRight className="mr-2 h-4 w-4" />
-                )}
-                Sign In
+                )} */}
+                Masuk
               </Button>
             </form>
 
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-border" />
@@ -156,12 +156,12 @@ const LoginPage: React.FC = () => {
                   Admin
                 </Button>
               </div>
-            </div>
+            </div> */}
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
+              Belum punya akun?{' '}
               <Link to="/register" className="text-primary hover:underline font-medium">
-                Sign up
+                Daftar
               </Link>
             </p>
           </CardContent>

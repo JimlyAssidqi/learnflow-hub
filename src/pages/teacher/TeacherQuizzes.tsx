@@ -179,9 +179,9 @@ const TeacherQuizzes: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Quizzes</h1>
+            <h1 className="text-3xl font-bold text-foreground">Kuis</h1>
             <p className="text-muted-foreground mt-1">
-              Create and manage quizzes for your students
+              Buat dan kelola kuis untuk siswa Anda.
             </p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -189,9 +189,9 @@ const TeacherQuizzes: React.FC = () => {
             if (!open) resetForm();
           }}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className='bg-blue-600 hover:bg-blue-600'>
                 <Plus className="h-4 w-4 mr-2" />
-                Create Quiz
+                Buat Kuis
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -342,7 +342,7 @@ const TeacherQuizzes: React.FC = () => {
                   </Button>
                 </div>
 
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-600">
                   {editingQuiz ? 'Update Quiz' : 'Create Quiz'}
                 </Button>
               </form>
@@ -409,13 +409,13 @@ const TeacherQuizzes: React.FC = () => {
             <CardContent className="py-12">
               <div className="text-center">
                 <ClipboardList className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground">No quizzes yet</h3>
+                <h3 className="text-lg font-medium text-foreground">Kuis belum ada</h3>
                 <p className="text-muted-foreground mt-1">
-                  Create your first quiz to test student knowledge.
+                  Buat kuis untuk mengetes kemampuan siswa
                 </p>
-                <Button className="mt-4" onClick={() => setIsDialogOpen(true)}>
+                <Button className="mt-4 bg-blue-600 hover:bg-blue-600" onClick={() => setIsDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Quiz
+                  Buat Kuis
                 </Button>
               </div>
             </CardContent>

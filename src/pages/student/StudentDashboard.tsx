@@ -53,32 +53,18 @@ const StudentDashboard: React.FC = () => {
 
   const stats = [
     {
-      label: 'Materials Available',
+      label: 'Materi Tersedia',
       value: materials.length,
       icon: BookOpen,
       color: 'text-primary',
       bgColor: 'bg-primary/10',
     },
     {
-      label: 'Quizzes Completed',
+      label: 'Kuis Diselesaikan',
       value: `${completedQuizzes}/${totalQuizzes}`,
       icon: ClipboardList,
       color: 'text-success',
       bgColor: 'bg-success/10',
-    },
-    {
-      label: 'Average Score',
-      value: `${averageScore}%`,
-      icon: TrendingUp,
-      color: 'text-accent',
-      bgColor: 'bg-accent/10',
-    },
-    {
-      label: 'Offline Materials',
-      value: offlineMaterials.length,
-      icon: Download,
-      color: 'text-info',
-      bgColor: 'bg-info/10',
     },
   ];
 
@@ -89,15 +75,15 @@ const StudentDashboard: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Welcome back, {user?.name.split(' ')[0]}! 👋
+              Selamat datang kembali, {user?.name.split(' ')[0]}! 👋
             </h1>
             <p className="text-muted-foreground mt-1">
-              Ready to continue learning? Here's your progress overview.
+              Siap melanjutkan pembelajaran? Berikut ringkasan kemajuan Anda.
             </p>
           </div>
           <Button asChild>
             <Link to="/student/materials">
-              Browse Materials
+              Cari Materi
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -122,89 +108,11 @@ const StudentDashboard: React.FC = () => {
           ))}
         </div>
 
-        {/* Progress & Recent Activity */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Learning Progress */}
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Learning Progress
-              </CardTitle>
-              <CardDescription>Your overall course completion</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-muted-foreground">Materials Viewed</span>
-                  <span className="font-medium">{Math.min(materials.length, 2)}/{materials.length}</span>
-                </div>
-                <Progress value={materials.length > 0 ? (2 / materials.length) * 100 : 0} className="h-2" />
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-muted-foreground">Quizzes Completed</span>
-                  <span className="font-medium">{completedQuizzes}/{totalQuizzes}</span>
-                </div>
-                <Progress value={totalQuizzes > 0 ? (completedQuizzes / totalQuizzes) * 100 : 0} className="h-2" />
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-muted-foreground">Average Score</span>
-                  <span className="font-medium">{averageScore}%</span>
-                </div>
-                <Progress value={averageScore} className="h-2" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                Quick Actions
-              </CardTitle>
-              <CardDescription>Jump right into learning</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link to="/student/materials">
-                <Button variant="outline" className="w-full justify-start h-auto py-3">
-                  <BookOpen className="mr-3 h-5 w-5 text-primary" />
-                  <div className="text-left">
-                    <p className="font-medium">Browse Materials</p>
-                    <p className="text-xs text-muted-foreground">{materials.length} available</p>
-                  </div>
-                </Button>
-              </Link>
-              <Link to="/student/quizzes">
-                <Button variant="outline" className="w-full justify-start h-auto py-3">
-                  <ClipboardList className="mr-3 h-5 w-5 text-success" />
-                  <div className="text-left">
-                    <p className="font-medium">Take a Quiz</p>
-                    <p className="text-xs text-muted-foreground">{quizzes.length - completedQuizzes} pending</p>
-                  </div>
-                </Button>
-              </Link>
-              <Link to="/student/discussions">
-                <Button variant="outline" className="w-full justify-start h-auto py-3">
-                  <MessageSquare className="mr-3 h-5 w-5 text-accent" />
-                  <div className="text-left">
-                    <p className="font-medium">Join Discussion</p>
-                    <p className="text-xs text-muted-foreground">Chat with peers</p>
-                  </div>
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Recent Materials */}
         <Card className="glass">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Recent Materials</CardTitle>
-              <CardDescription>Latest learning resources</CardDescription>
+              <CardTitle>Materi Terbaru</CardTitle>
             </div>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/student/materials">View all</Link>

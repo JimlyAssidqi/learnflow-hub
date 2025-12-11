@@ -39,28 +39,28 @@ const getNavItems = (role: string): NavItem[] => {
   switch (role) {
     case 'admin':
       return [
-        { label: 'Dashboard', href: '/admin', icon: Home },
+        { label: 'Beranda', href: '/admin', icon: Home },
         { label: 'Users', href: '/admin/users', icon: Users },
         { label: 'Mata Pelajaran', href: '/admin/subjects', icon: Library },
-        { label: 'Content', href: '/admin/content', icon: FileText },
-        { label: 'Settings', href: '/admin/settings', icon: Settings },
+        // { label: 'Content', href: '/admin/content', icon: FileText },
+        // { label: 'Settings', href: '/admin/settings', icon: Settings },
       ];
     case 'teacher':
       return [
-        { label: 'Dashboard', href: '/teacher', icon: Home },
-        { label: 'Materials', href: '/teacher/materials', icon: BookOpen },
-        { label: 'Quizzes', href: '/teacher/quizzes', icon: ClipboardList },
-        { label: 'Students', href: '/teacher/students', icon: GraduationCap },
-        { label: 'Analytics', href: '/teacher/analytics', icon: BarChart3 },
+        { label: 'Beranda', href: '/teacher', icon: Home },
+        { label: 'Materi', href: '/teacher/materials', icon: BookOpen },
+        { label: 'Kuis', href: '/teacher/quizzes', icon: ClipboardList },
+        { label: 'Siswa', href: '/teacher/students', icon: GraduationCap },
+        // { label: 'Analytics', href: '/teacher/analytics', icon: BarChart3 },
       ];
     case 'student':
     default:
       return [
-        { label: 'Dashboard', href: '/student', icon: Home },
-        { label: 'Materials', href: '/student/materials', icon: BookOpen },
-        { label: 'Quizzes', href: '/student/quizzes', icon: ClipboardList },
-        { label: 'Discussions', href: '/student/discussions', icon: MessageSquare },
-        { label: 'Offline', href: '/student/offline', icon: Download },
+        { label: 'Beranda', href: '/student', icon: Home },
+        { label: 'Materi', href: '/student/materials', icon: BookOpen },
+        { label: 'Kuis', href: '/student/quizzes', icon: ClipboardList },
+        { label: 'Chat', href: '/student/discussions', icon: MessageSquare },
+        // { label: 'Offline', href: '/student/offline', icon: Download },
       ];
   }
 };
@@ -116,10 +116,10 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                   key={item.href}
                   to={item.href}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    'flex items-center text-muted-foreground gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                    // isActive
+                    //   ? 'bg-primary text-primary-foreground'
+                    //   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   )}
                 >
                   <item.icon className="h-4 w-4" />
