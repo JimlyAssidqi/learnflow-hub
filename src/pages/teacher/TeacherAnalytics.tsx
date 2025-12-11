@@ -176,7 +176,7 @@ const TeacherAnalytics: React.FC = () => {
                 {quizPerformance.map((quiz) => (
                   <div key={quiz.id}>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="font-medium text-sm truncate pr-4">{quiz.title}</p>
+                      <p className="font-medium text-sm truncate pr-4">{quiz.judul_kuis}</p>
                       <span className="text-sm text-muted-foreground">
                         {quiz.attempts} attempts
                       </span>

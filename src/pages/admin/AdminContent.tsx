@@ -147,9 +147,9 @@ const AdminContent: React.FC = () => {
                           <ClipboardList className="h-5 w-5 text-success" />
                         </div>
                         <div>
-                          <p className="font-medium">{quiz.title}</p>
+                          <p className="font-medium">{quiz.judul_kuis}</p>
                           <p className="text-sm text-muted-foreground">
-                            by {quiz.teacherName} • {quiz.questions.length} questions
+                            by {quiz.teacherName} • {quiz.subjectName}
                           </p>
                         </div>
                       </div>

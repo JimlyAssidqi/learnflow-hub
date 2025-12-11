@@ -40,24 +40,26 @@ export interface Material {
 
 export interface Quiz {
   id: string;
-  title: string;
-  description: string;
-  materialId?: string;
-  teacherId: string;
-  teacherName: string;
-  questions: Question[];
-  timeLimit?: number; // in minutes
+  id_guru: string;
+  id_matapelajaran: number;
+  judul_kuis: string;
+  teacherName?: string;
+  subjectName?: string;
+  timeLimit?: number;
   createdAt: string;
   isPublished: boolean;
 }
 
 export interface Question {
   id: string;
-  type: 'multiple-choice' | 'short-answer';
-  text: string;
-  options?: string[]; // for multiple choice
-  correctAnswer: string;
-  points: number;
+  id_kuis: string;
+  pertanyaan: string;
+  opsi_a: string;
+  opsi_b: string;
+  opsi_c: string;
+  opsi_d: string;
+  jawaban_benar: 'A' | 'B' | 'C' | 'D';
+  skor: number;
 }
 
 export interface QuizAttempt {
