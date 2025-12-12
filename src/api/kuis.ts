@@ -57,3 +57,12 @@ export const deleteSoalkuis = async (id: string) => {
     return error.response.data;
   }
 }
+
+export const ubahSoalKuisApi = async (id: string, data: Question) => {
+  try {
+    const response = await axios.put(`${API_URL}/api/soal-kuis/${id}`, data);
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+}

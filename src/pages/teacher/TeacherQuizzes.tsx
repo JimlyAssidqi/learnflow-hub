@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { getMateriByGuruApi } from '@/api/materi';
 import { getMataPelajaranApi } from '@/api/mataPelajaran';
-import { deleteSoalkuis, getKuisByGuru, getSoalBuKuis, tambahKuisApi, tambahSoalKuisApi, ubahKuisApi } from '@/api/kuis';
+import { deleteSoalkuis, getKuisByGuru, getSoalBuKuis, tambahKuisApi, tambahSoalKuisApi, ubahKuisApi, ubahSoalKuisApi } from '@/api/kuis';
 
 const TeacherQuizzes: React.FC = () => {
   const { user } = useAuth();
@@ -36,6 +36,7 @@ const TeacherQuizzes: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   const [formData, setFormData] = useState({
     id_matapelajaran: '',
@@ -96,6 +97,7 @@ const TeacherQuizzes: React.FC = () => {
       jawaban_benar: 'A',
       skor: 10,
     });
+    setEditingQuestion(null);
   };
 
   const handleSubmitQuiz = async (e: React.FormEvent) => {
@@ -157,7 +159,6 @@ const TeacherQuizzes: React.FC = () => {
     }
 
     const questionData: Question = {
-      // id: `question-${Date.now()}`,
       id_kuis: selectedQuiz.id,
       pertanyaan: questionForm.pertanyaan,
       opsi_a: questionForm.opsi_a,
@@ -168,15 +169,37 @@ const TeacherQuizzes: React.FC = () => {
       skor_soal: questionForm.skor,
     };
 
-    await tambahSoalKuisApi(questionData);
+    if (editingQuestion) {
+      await ubahSoalKuisApi(editingQuestion.id!, questionData);
+      toast({
+        title: 'Soal diperbarui!',
+        description: `Soal berhasil diperbarui.`,
+      });
+    } else {
+      await tambahSoalKuisApi(questionData);
+      toast({
+        title: 'Soal ditambahkan!',
+        description: `Soal berhasil ditambahkan ke kuis "${selectedQuiz.judul_kuis}".`,
+      });
+    }
+    
     loadQuestions();
     setIsQuestionDialogOpen(false);
     resetQuestionForm();
+  };
 
-    toast({
-      title: 'Soal ditambahkan!',
-      description: `Soal berhasil ditambahkan ke kuis "${selectedQuiz.judul_kuis}".`,
+  const handleEditQuestion = (question: Question) => {
+    setEditingQuestion(question);
+    setQuestionForm({
+      pertanyaan: question.pertanyaan,
+      opsi_a: question.opsi_a,
+      opsi_b: question.opsi_b,
+      opsi_c: question.opsi_c,
+      opsi_d: question.opsi_d,
+      jawaban_benar: question.jawaban_benar,
+      skor: question.skor_soal,
     });
+    setIsQuestionDialogOpen(true);
   };
 
   const handleEdit = (quiz: Quiz) => {
@@ -240,16 +263,19 @@ const TeacherQuizzes: React.FC = () => {
                 {selectedQuiz.subjectName} • ID Guru: {selectedQuiz.id_guru}
               </p> */}
             </div>
-            <Dialog open={isQuestionDialogOpen} onOpenChange={setIsQuestionDialogOpen}>
+            <Dialog open={isQuestionDialogOpen} onOpenChange={(open) => {
+              setIsQuestionDialogOpen(open);
+              if (!open) resetQuestionForm();
+            }}>
               <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700">
+                <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => resetQuestionForm()}>
                   <Plus className="h-4 w-4 mr-2" />
                   Tambah Soal
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg">
                 <DialogHeader>
-                  <DialogTitle>Tambah Soal Baru</DialogTitle>
+                  <DialogTitle>{editingQuestion ? 'Edit Soal' : 'Tambah Soal Baru'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmitQuestion} className="space-y-4">
                   <div className="space-y-2">
@@ -355,7 +381,7 @@ const TeacherQuizzes: React.FC = () => {
                     </div>
                   </div>
                   <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                    Simpan Soal
+                    {editingQuestion ? 'Perbarui Soal' : 'Simpan Soal'}
                   </Button>
                 </form>
               </DialogContent>
@@ -375,6 +401,14 @@ const TeacherQuizzes: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge>{question.skor_soal} poin</Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEditQuestion(question)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -559,20 +593,10 @@ const TeacherQuizzes: React.FC = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>ID Guru: {quiz.id_guru}</span>
                     <span>{quiz.timeLimit || 15} menit</span>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      togglePublish(quiz);
-                    }}
-                  >
-                    {quiz.isPublished ? 'Batalkan Publikasi' : 'Publikasikan'}
-                  </Button>
                 </CardContent>
               </Card>
             ))}
