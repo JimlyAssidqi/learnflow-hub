@@ -288,11 +288,16 @@ const StudentQuizzes: React.FC = () => {
                     onValueChange={(value) => handleAnswer(currentQuestion.id, value)}
                     className="space-y-3"
                   >
-                    {(['A', 'B', 'C', 'D'] as const).map((key) => (
-                      <div key={key} className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value={key} id={`option-${key}`} />
-                        <Label htmlFor={`option-${key}`} className="cursor-pointer flex-1">
-                          {key}. {getOptionByKey(currentQuestion, key)}
+                    {([
+                      { key: 'A', value: currentQuestion.opsi_a },
+                      { key: 'B', value: currentQuestion.opsi_b },
+                      { key: 'C', value: currentQuestion.opsi_c },
+                      { key: 'D', value: currentQuestion.opsi_d },
+                    ]).map((option) => (
+                      <div key={option.key} className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                        <RadioGroupItem value={option.value} id={`option-${option.key}`} />
+                        <Label htmlFor={`option-${option.key}`} className="cursor-pointer flex-1">
+                          {option.key}. {option.value}
                         </Label>
                       </div>
                     ))}
