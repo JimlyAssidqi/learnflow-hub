@@ -78,9 +78,9 @@ export const ubahSoalKuisApi = async (id: string, data: Question) => {
 
 
 
-export const jawabSoalKuis = async (data: Question) => {
+export const jawabSoalKuis = async (data: { id_soal: number; id_siswa: number; jawaban_siswa: string }) => {
   try {
-    const response = await axios.post(`${API_URL}/api/soal-kuis`, data);
+    const response = await axios.post(`${API_URL}/api/jawaban-kuis`, data);
     return response.data;
   } catch (error) {
     return error.response.data;
