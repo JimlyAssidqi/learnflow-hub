@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { getMateriByGuruApi } from '@/api/materi';
 import { getMataPelajaranApi } from '@/api/mataPelajaran';
-import { deleteSoalkuis, getKuisByGuru, getSoalBuKuis, tambahKuisApi, tambahSoalKuisApi, ubahKuisApi, ubahSoalKuisApi } from '@/api/kuis';
+import { deleteKuisApi, deleteSoalkuis, getKuisByGuru, getSoalBuKuis, tambahKuisApi, tambahSoalKuisApi, ubahKuisApi, ubahSoalKuisApi } from '@/api/kuis';
 
 const TeacherQuizzes: React.FC = () => {
   const { user } = useAuth();
@@ -214,13 +214,16 @@ const TeacherQuizzes: React.FC = () => {
   };
 
   const handleDelete = async (quizId: string) => {
-    await deleteItem('quizzes', quizId);
+    // await deleteItem('quizzes', quizId);
+    const response = await deleteKuisApi(quizId);
     // Delete all questions for this quiz
-    const quizQuestions = questions.filter(q => q.id_kuis === quizId);
-    for (const question of quizQuestions) {
-      await deleteItem('questions', question.id);
-    }
-    setQuizzes(prev => prev.filter(q => q.id !== quizId));
+    // const quizQuestions = questions.filter(q => q.id_kuis === quizId);
+    // for (const question of quizQuestions) {
+    //   await deleteItem('questions', question.id);
+    // }
+    // setQuizzes(prev => prev.filter(q => q.id !== quizId));
+    console.log(response)
+    loadData();
     toast({
       title: 'Kuis dihapus',
       description: 'Kuis dan semua soalnya telah dihapus.',

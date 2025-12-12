@@ -135,11 +135,12 @@ const StudentQuizzes: React.FC = () => {
       // Submit each answer to the API
       for (const question of activeQuestions) {
         const jawaban = answers[question.id] || '';
-        await jawabSoalKuis({
+        const response = await jawabSoalKuis({
           id_soal: question.id,
           id_siswa: parseInt(user.id),
           jawaban_siswa: jawaban
         });
+        console.log(response)
       }
 
       // Calculate score locally for display

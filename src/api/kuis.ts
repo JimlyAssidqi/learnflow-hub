@@ -40,6 +40,15 @@ export const ubahKuisApi = async (id: string, data: Quiz) => {
   }
 }
 
+export const deleteKuisApi = async (id: string) => {
+  try {
+    const response = await axios.delete(`${API_URL}/api/kuis/${id}`);
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+}
+
 export const tambahSoalKuisApi = async (data: Question) => {
   try {
     const response = await axios.post(`${API_URL}/api/soal-kuis`, data);
@@ -80,7 +89,7 @@ export const ubahSoalKuisApi = async (id: string, data: Question) => {
 
 export const jawabSoalKuis = async (data: { id_soal: number; id_siswa: number; jawaban_siswa: string }) => {
   try {
-    const response = await axios.post(`${API_URL}/api/jawaban-kuis`, data);
+    const response = await axios.post(`${API_URL}/api/jawaban`, data);
     return response.data;
   } catch (error) {
     return error.response.data;
