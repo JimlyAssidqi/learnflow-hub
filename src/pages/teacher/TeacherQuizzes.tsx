@@ -10,11 +10,11 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getAllItems, addItem, updateItem, deleteItem, getItemsByIndex } from '@/lib/db';
-import { Quiz, Question, Subject } from '@/types';
+import { Quiz, Question, Subject, KuisData } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  ClipboardList, 
-  Plus, 
+import {
+  ClipboardList,
+  Plus,
   Trash2,
   Edit,
   CheckCircle2,
@@ -22,6 +22,9 @@ import {
   ArrowLeft,
   BookOpen
 } from 'lucide-react';
+import { getMateriByGuruApi } from '@/api/materi';
+import { getMataPelajaranApi } from '@/api/mataPelajaran';
+import { deleteSoalkuis, getKuisByGuru, getSoalBuKuis, tambahKuisApi, tambahSoalKuisApi, ubahKuisApi } from '@/api/kuis';
 
 const TeacherQuizzes: React.FC = () => {
   const { user } = useAuth();
@@ -33,49 +36,50 @@ const TeacherQuizzes: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
-  
+
   const [formData, setFormData] = useState({
     id_matapelajaran: '',
     judul_kuis: '',
     timeLimit: 15,
     isPublished: false,
   });
-  
+
   const [questionForm, setQuestionForm] = useState({
     pertanyaan: '',
     opsi_a: '',
     opsi_b: '',
     opsi_c: '',
     opsi_d: '',
-    jawaban_benar: 'A' as 'A' | 'B' | 'C' | 'D',
+    jawaban_benar: '' as string,
     skor: 10,
   });
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!user) return;
-      const [userQuizzes, allSubjects] = await Promise.all([
-        getItemsByIndex<Quiz>('quizzes', 'teacherId', user.id),
-        getAllItems<Subject>('subjects')
-      ]);
-      setQuizzes(userQuizzes);
-      setSubjects(allSubjects);
-    };
     loadData();
   }, [user]);
 
+  const loadData = async () => {
+    if (!user) return;
+    const [userQuizzes, allSubjects] = await Promise.all([
+      getKuisByGuru(user.id),
+      getMataPelajaranApi()
+    ]);
+    setQuizzes(userQuizzes.data);
+    setSubjects(allSubjects.data);
+  };
+
   useEffect(() => {
-    const loadQuestions = async () => {
-      if (!selectedQuiz) {
-        setQuestions([]);
-        return;
-      }
-      const allQuestions = await getAllItems<Question>('questions');
-      const quizQuestions = allQuestions.filter(q => q.id_kuis === selectedQuiz.id);
-      setQuestions(quizQuestions);
-    };
     loadQuestions();
   }, [selectedQuiz]);
+  
+  const loadQuestions = async () => {
+    if (!selectedQuiz) {
+      setQuestions([]);
+      return;
+    }
+    const response = await getSoalBuKuis(selectedQuiz.id!);
+    setQuestions(response.data);
+  };
 
   const resetForm = () => {
     setFormData({ id_matapelajaran: '', judul_kuis: '', timeLimit: 15, isPublished: false });
@@ -121,16 +125,16 @@ const TeacherQuizzes: React.FC = () => {
       isPublished: formData.isPublished,
     };
 
+
     if (editingQuiz) {
-      await updateItem('quizzes', quizData);
-      setQuizzes(prev => prev.map(q => q.id === quizData.id ? quizData : q));
+      await ubahKuisApi(editingQuiz.id!, quizData);
     } else {
-      await addItem('quizzes', quizData);
-      setQuizzes(prev => [...prev, quizData]);
+      await tambahKuisApi(quizData);
     }
 
     setIsDialogOpen(false);
     resetForm();
+    loadData();
 
     toast({
       title: editingQuiz ? 'Kuis diperbarui!' : 'Kuis dibuat!',
@@ -142,8 +146,8 @@ const TeacherQuizzes: React.FC = () => {
     e.preventDefault();
     if (!selectedQuiz) return;
 
-    if (!questionForm.pertanyaan || !questionForm.opsi_a || !questionForm.opsi_b || 
-        !questionForm.opsi_c || !questionForm.opsi_d) {
+    if (!questionForm.pertanyaan || !questionForm.opsi_a || !questionForm.opsi_b ||
+      !questionForm.opsi_c || !questionForm.opsi_d) {
       toast({
         title: 'Data tidak lengkap',
         description: 'Isi semua field pertanyaan dan opsi.',
@@ -153,7 +157,7 @@ const TeacherQuizzes: React.FC = () => {
     }
 
     const questionData: Question = {
-      id: `question-${Date.now()}`,
+      // id: `question-${Date.now()}`,
       id_kuis: selectedQuiz.id,
       pertanyaan: questionForm.pertanyaan,
       opsi_a: questionForm.opsi_a,
@@ -161,11 +165,11 @@ const TeacherQuizzes: React.FC = () => {
       opsi_c: questionForm.opsi_c,
       opsi_d: questionForm.opsi_d,
       jawaban_benar: questionForm.jawaban_benar,
-      skor: questionForm.skor,
+      skor_soal: questionForm.skor,
     };
 
-    await addItem('questions', questionData);
-    setQuestions(prev => [...prev, questionData]);
+    await tambahSoalKuisApi(questionData);
+    loadQuestions();
     setIsQuestionDialogOpen(false);
     resetQuestionForm();
 
@@ -201,8 +205,9 @@ const TeacherQuizzes: React.FC = () => {
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
-    await deleteItem('questions', questionId);
-    setQuestions(prev => prev.filter(q => q.id !== questionId));
+    // await deleteItem('questions', questionId);
+    await deleteSoalkuis(questionId);
+    loadQuestions();
     toast({
       title: 'Soal dihapus',
       description: 'Soal berhasil dihapus.',
@@ -231,9 +236,9 @@ const TeacherQuizzes: React.FC = () => {
             </Button>
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-foreground">{selectedQuiz.judul_kuis}</h1>
-              <p className="text-muted-foreground mt-1">
+              {/* <p className="text-muted-foreground mt-1">
                 {selectedQuiz.subjectName} • ID Guru: {selectedQuiz.id_guru}
-              </p>
+              </p> */}
             </div>
             <Dialog open={isQuestionDialogOpen} onOpenChange={setIsQuestionDialogOpen}>
               <DialogTrigger asChild>
@@ -308,18 +313,34 @@ const TeacherQuizzes: React.FC = () => {
                       <Label>Jawaban Benar</Label>
                       <Select
                         value={questionForm.jawaban_benar}
-                        onValueChange={(value) => setQuestionForm(prev => ({ ...prev, jawaban_benar: value as 'A' | 'B' | 'C' | 'D' }))}
+                        onValueChange={(value) =>
+                          setQuestionForm(prev => ({ ...prev, jawaban_benar: value }))
+                        }
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Pilih jawaban benar" />
                         </SelectTrigger>
+
                         <SelectContent>
-                          <SelectItem value="A">A</SelectItem>
-                          <SelectItem value="B">B</SelectItem>
-                          <SelectItem value="C">C</SelectItem>
-                          <SelectItem value="D">D</SelectItem>
+                          <SelectItem value={questionForm.opsi_a || "__A__"}>
+                            {questionForm.opsi_a || "Opsi A"}
+                          </SelectItem>
+
+                          <SelectItem value={questionForm.opsi_b || "__B__"}>
+                            {questionForm.opsi_b || "Opsi B"}
+                          </SelectItem>
+
+                          <SelectItem value={questionForm.opsi_c || "__C__"}>
+                            {questionForm.opsi_c || "Opsi C"}
+                          </SelectItem>
+
+                          <SelectItem value={questionForm.opsi_d || "__D__"}>
+                            {questionForm.opsi_d || "Opsi D"}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
+
+
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="skor">Skor</Label>
@@ -353,7 +374,7 @@ const TeacherQuizzes: React.FC = () => {
                         <CardTitle className="text-lg">{question.pertanyaan}</CardTitle>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge>{question.skor} poin</Badge>
+                        <Badge>{question.skor_soal} poin</Badge>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -367,16 +388,16 @@ const TeacherQuizzes: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className={`p-3 rounded-lg ${question.jawaban_benar === 'A' ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
+                      <div className={`p-3 rounded-lg ${question.jawaban_benar === question.opsi_a ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
                         <span className="font-medium">A.</span> {question.opsi_a}
                       </div>
-                      <div className={`p-3 rounded-lg ${question.jawaban_benar === 'B' ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
+                      <div className={`p-3 rounded-lg ${question.jawaban_benar === question.opsi_b ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
                         <span className="font-medium">B.</span> {question.opsi_b}
                       </div>
-                      <div className={`p-3 rounded-lg ${question.jawaban_benar === 'C' ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
+                      <div className={`p-3 rounded-lg ${question.jawaban_benar === question.opsi_c ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
                         <span className="font-medium">C.</span> {question.opsi_c}
                       </div>
-                      <div className={`p-3 rounded-lg ${question.jawaban_benar === 'D' ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
+                      <div className={`p-3 rounded-lg ${question.jawaban_benar === question.opsi_d ? 'bg-green-500/20 border border-green-500' : 'bg-muted'}`}>
                         <span className="font-medium">D.</span> {question.opsi_d}
                       </div>
                     </div>
@@ -465,7 +486,7 @@ const TeacherQuizzes: React.FC = () => {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                {/* <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="timeLimit">Batas Waktu (menit)</Label>
                     <Input
@@ -485,7 +506,7 @@ const TeacherQuizzes: React.FC = () => {
                       onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPublished: checked }))}
                     />
                   </div>
-                </div>
+                </div> */}
                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
                   {editingQuiz ? 'Perbarui Kuis' : 'Buat Kuis'}
                 </Button>
@@ -498,8 +519,8 @@ const TeacherQuizzes: React.FC = () => {
         {quizzes.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {quizzes.map((quiz) => (
-              <Card 
-                key={quiz.id} 
+              <Card
+                key={quiz.id}
                 className="glass glass-hover cursor-pointer transition-all hover:scale-[1.02]"
                 onClick={() => setSelectedQuiz(quiz)}
               >

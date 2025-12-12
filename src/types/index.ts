@@ -39,27 +39,33 @@ export interface Material {
 
 
 export interface Quiz {
-  id: string;
-  id_guru: string;
-  id_matapelajaran: number;
-  judul_kuis: string;
+  id?: string;
+  id_guru?: string;
+  id_matapelajaran?: number;
+  judul_kuis?: string;
   teacherName?: string;
   subjectName?: string;
   timeLimit?: number;
-  createdAt: string;
-  isPublished: boolean;
+  createdAt?: string;
+  isPublished?: boolean;
+}
+
+export interface KuisData {
+  id_guru: number;
+  id_matatpelajaran: number;
+  judul: string;
 }
 
 export interface Question {
-  id: string;
+  id?: string;
   id_kuis: string;
   pertanyaan: string;
   opsi_a: string;
   opsi_b: string;
   opsi_c: string;
   opsi_d: string;
-  jawaban_benar: 'A' | 'B' | 'C' | 'D';
-  skor: number;
+  jawaban_benar: string;
+  skor_soal: number;
 }
 
 export interface QuizAttempt {
