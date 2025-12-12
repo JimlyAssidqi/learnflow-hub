@@ -8,14 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { getAllItems, getItemsByIndex, addItem } from '@/lib/db';
-import { Quiz, QuizAttempt, Question } from '@/types';
+import { getAllKuis, getSoalBuKuis, jawabSoalKuis } from '@/api/kuis';
+import { Quiz, Question } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
   ClipboardList, 
   Clock, 
   CheckCircle2, 
-  XCircle,
   Play,
   Trophy,
   ArrowRight,
@@ -23,61 +23,94 @@ import {
   BookOpen
 } from 'lucide-react';
 
+interface ApiQuiz {
+  id: number;
+  id_guru: number;
+  id_matapelajaran: number;
+  judul_kuis: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ApiQuestion {
+  id: number;
+  id_kuis: number;
+  pertanyaan: string;
+  opsi_a: string;
+  opsi_b: string;
+  opsi_c: string;
+  opsi_d: string;
+  jawaban_benar: string;
+  skor_soal: number;
+}
+
 const StudentQuizzes: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
-  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
-  const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
+  const [quizzes, setQuizzes] = useState<ApiQuiz[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  
+  const [activeQuiz, setActiveQuiz] = useState<ApiQuiz | null>(null);
+  const [activeQuestions, setActiveQuestions] = useState<ApiQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<number, string>>({});
   const [showResults, setShowResults] = useState(false);
-  const [lastAttempt, setLastAttempt] = useState<QuizAttempt | null>(null);
+  const [score, setScore] = useState({ correct: 0, total: 0 });
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!user) return;
-      const [allQuizzes, allQuestions, userAttempts] = await Promise.all([
-        getAllItems<Quiz>('quizzes'),
-        getAllItems<Question>('questions'),
-        getItemsByIndex<QuizAttempt>('quizAttempts', 'studentId', user.id),
-      ]);
-      setQuizzes(allQuizzes.filter(q => q.isPublished));
-      setQuestions(allQuestions);
-      setAttempts(userAttempts);
-    };
-    loadData();
-  }, [user]);
+    loadQuizzes();
+  }, []);
 
-  const getQuestionsForQuiz = (quizId: string) => {
-    return questions.filter(q => q.id_kuis === quizId);
-  };
-
-  const getAttemptForQuiz = (quizId: string) => {
-    return attempts.find(a => a.quizId === quizId);
-  };
-
-  const startQuiz = (quiz: Quiz) => {
-    const quizQuestions = getQuestionsForQuiz(quiz.id);
-    if (quizQuestions.length === 0) {
+  const loadQuizzes = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllKuis();
+      if (response?.data) {
+        setQuizzes(response.data);
+      }
+    } catch (error) {
       toast({
-        title: 'Kuis belum memiliki soal',
-        description: 'Kuis ini belum memiliki soal yang bisa dikerjakan.',
+        title: 'Error',
+        description: 'Gagal memuat daftar kuis',
         variant: 'destructive',
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-    setActiveQuiz(quiz);
-    setActiveQuestions(quizQuestions);
-    setCurrentQuestionIndex(0);
-    setAnswers({});
-    setShowResults(false);
-    setLastAttempt(null);
   };
 
-  const handleAnswer = (questionId: string, answer: string) => {
+  const startQuiz = async (quiz: ApiQuiz) => {
+    try {
+      setLoadingQuestions(true);
+      const response = await getSoalBuKuis(quiz.id.toString());
+      if (response?.data && response.data.length > 0) {
+        setActiveQuiz(quiz);
+        setActiveQuestions(response.data);
+        setCurrentQuestionIndex(0);
+        setAnswers({});
+        setShowResults(false);
+        setScore({ correct: 0, total: 0 });
+      } else {
+        toast({
+          title: 'Kuis belum memiliki soal',
+          description: 'Kuis ini belum memiliki soal yang bisa dikerjakan.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat soal kuis',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingQuestions(false);
+    }
+  };
+
+  const handleAnswer = (questionId: number, answer: string) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
@@ -96,56 +129,56 @@ const StudentQuizzes: React.FC = () => {
   const submitQuiz = async () => {
     if (!activeQuiz || !user) return;
 
-    let score = 0;
-    let totalPoints = 0;
+    try {
+      setSubmitting(true);
 
-    activeQuestions.forEach(question => {
-      totalPoints += question.skor_soal;
-      const userAnswer = answers[question.id];
-      
-      if (userAnswer === question.jawaban_benar) {
-        score += question.skor_soal;
+      // Submit each answer to the API
+      for (const question of activeQuestions) {
+        const jawaban = answers[question.id] || '';
+        await jawabSoalKuis({
+          id_soal: question.id,
+          id_siswa: parseInt(user.id),
+          jawaban_siswa: jawaban
+        });
       }
-    });
 
-    const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
+      // Calculate score locally for display
+      let correctCount = 0;
+      activeQuestions.forEach(question => {
+        const userAnswer = answers[question.id];
+        if (userAnswer === question.jawaban_benar) {
+          correctCount++;
+        }
+      });
 
-    const attempt: QuizAttempt = {
-      id: `attempt-${Date.now()}`,
-      quizId: activeQuiz.id,
-      studentId: user.id,
-      studentName: user.name,
-      answers: Object.entries(answers).map(([questionId, answer]) => ({
-        questionId,
-        answer,
-      })),
-      score,
-      totalPoints,
-      percentage,
-      submittedAt: new Date().toISOString(),
-    };
+      setScore({ correct: correctCount, total: activeQuestions.length });
+      setShowResults(true);
 
-    await addItem('quizAttempts', attempt);
-    setAttempts(prev => [...prev, attempt]);
-    setLastAttempt(attempt);
-    setShowResults(true);
-
-    toast({
-      title: 'Kuis selesai!',
-      description: `Skor Anda: ${percentage}%`,
-    });
+      toast({
+        title: 'Kuis selesai!',
+        description: `Jawaban Anda telah dikirim.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal mengirim jawaban',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const closeQuiz = () => {
     setActiveQuiz(null);
     setActiveQuestions([]);
     setShowResults(false);
-    setLastAttempt(null);
+    setScore({ correct: 0, total: 0 });
   };
 
   const currentQuestion = activeQuestions[currentQuestionIndex];
 
-  const getOptionByKey = (question: Question, key: string) => {
+  const getOptionByKey = (question: ApiQuestion, key: string) => {
     switch (key) {
       case 'A': return question.opsi_a;
       case 'B': return question.opsi_b;
@@ -155,74 +188,65 @@ const StudentQuizzes: React.FC = () => {
     }
   };
 
+  const answeredCount = Object.keys(answers).length;
+  const allAnswered = answeredCount === activeQuestions.length;
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <LoadingSpinner size="lg" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-foreground">Kuis</h1>
+          <p className="text-muted-foreground mt-1">Daftar kuis yang tersedia</p>
         </div>
 
         {/* Quizzes Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {quizzes.map((quiz) => {
-            const attempt = getAttemptForQuiz(quiz.id);
-            const quizQuestions = getQuestionsForQuiz(quiz.id);
-            
-            return (
-              <Card key={quiz.id} className="glass glass-hover">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <Badge variant="secondary">
-                      {quizQuestions.length} Soal
-                    </Badge>
-                    {attempt && (
-                      <Badge className={`${
-                        attempt.percentage >= 70 ? 'bg-success text-success-foreground' :
-                        attempt.percentage >= 50 ? 'bg-accent text-accent-foreground' :
-                        'bg-destructive text-destructive-foreground'
-                      }`}>
-                        {attempt.percentage}%
-                      </Badge>
+          {quizzes.map((quiz) => (
+            <Card key={quiz.id} className="glass glass-hover">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">{quiz.judul_kuis}</CardTitle>
+                <CardDescription className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Mata Pelajaran ID: {quiz.id_matapelajaran}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {new Date(quiz.created_at).toLocaleDateString('id-ID')}
+                    </span>
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => startQuiz(quiz)}
+                    disabled={loadingQuestions}
+                  >
+                    {loadingQuestions ? (
+                      <LoadingSpinner size="sm" />
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-2" />
+                        Mulai Kuis
+                      </>
                     )}
-                  </div>
-                  <CardTitle className="text-lg mt-2">{quiz.judul_kuis}</CardTitle>
-                  <CardDescription className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    {quiz.subjectName}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {quiz.timeLimit || 15} menit
-                      </span>
-                      <span>oleh {quiz.teacherName}</span>
-                    </div>
-                    <Button
-                      className="w-full"
-                      onClick={() => startQuiz(quiz)}
-                      disabled={quizQuestions.length === 0}
-                    >
-                      {attempt ? (
-                        <>
-                          <Trophy className="h-4 w-4 mr-2" />
-                          Kerjakan Ulang
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4 mr-2" />
-                          Mulai Kuis
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {quizzes.length === 0 && (
@@ -236,14 +260,15 @@ const StudentQuizzes: React.FC = () => {
         )}
 
         {/* Quiz Dialog */}
-        <Dialog open={!!activeQuiz} onOpenChange={() => !showResults && closeQuiz()}>
+        <Dialog open={!!activeQuiz} onOpenChange={() => !showResults && !submitting && closeQuiz()}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             {!showResults && activeQuiz && currentQuestion && (
               <>
                 <DialogHeader>
                   <DialogTitle>{activeQuiz.judul_kuis}</DialogTitle>
                   <DialogDescription>
-                    Soal {currentQuestionIndex + 1} dari {activeQuestions.length}
+                    Soal {currentQuestionIndex + 1} dari {activeQuestions.length} | 
+                    Dijawab: {answeredCount}/{activeQuestions.length}
                   </DialogDescription>
                 </DialogHeader>
                 
@@ -284,22 +309,39 @@ const StudentQuizzes: React.FC = () => {
                     Sebelumnya
                   </Button>
                   
-                  {currentQuestionIndex === activeQuestions.length - 1 ? (
-                    <Button onClick={submitQuiz}>
-                      Selesai
-                      <CheckCircle2 className="h-4 w-4 ml-2" />
-                    </Button>
-                  ) : (
-                    <Button onClick={nextQuestion}>
-                      Selanjutnya
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  )}
+                  <div className="flex gap-2">
+                    {currentQuestionIndex === activeQuestions.length - 1 ? (
+                      <Button 
+                        onClick={submitQuiz} 
+                        disabled={!allAnswered || submitting}
+                      >
+                        {submitting ? (
+                          <LoadingSpinner size="sm" />
+                        ) : (
+                          <>
+                            Submit
+                            <CheckCircle2 className="h-4 w-4 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button onClick={nextQuestion}>
+                        Selanjutnya
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
+
+                {!allAnswered && currentQuestionIndex === activeQuestions.length - 1 && (
+                  <p className="text-sm text-muted-foreground text-center mt-2">
+                    Jawab semua soal terlebih dahulu untuk submit
+                  </p>
+                )}
               </>
             )}
 
-            {showResults && lastAttempt && activeQuiz && (
+            {showResults && activeQuiz && (
               <>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
@@ -310,48 +352,15 @@ const StudentQuizzes: React.FC = () => {
 
                 <div className="py-6 text-center">
                   <div className={`text-6xl font-bold mb-2 ${
-                    lastAttempt.percentage >= 70 ? 'text-success' :
-                    lastAttempt.percentage >= 50 ? 'text-accent' :
+                    (score.correct / score.total * 100) >= 70 ? 'text-success' :
+                    (score.correct / score.total * 100) >= 50 ? 'text-accent' :
                     'text-destructive'
                   }`}>
-                    {lastAttempt.percentage}%
+                    {Math.round(score.correct / score.total * 100)}%
                   </div>
                   <p className="text-muted-foreground">
-                    Skor Anda {lastAttempt.score} dari {lastAttempt.totalPoints} poin
+                    Jawaban benar: {score.correct} dari {score.total} soal
                   </p>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="font-medium">Review Jawaban:</h4>
-                  {activeQuestions.map((q, idx) => {
-                    const userAnswer = answers[q.id];
-                    const isCorrect = userAnswer === q.jawaban_benar;
-                    
-                    return (
-                      <div key={q.id} className={`p-3 rounded-lg border ${
-                        isCorrect ? 'border-success bg-success/5' : 'border-destructive bg-destructive/5'
-                      }`}>
-                        <div className="flex items-start gap-2">
-                          {isCorrect ? (
-                            <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
-                          ) : (
-                            <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                          )}
-                          <div>
-                            <p className="text-sm font-medium">Q{idx + 1}: {q.pertanyaan}</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Jawaban Anda: {userAnswer ? `${userAnswer}. ${getOptionByKey(q, userAnswer)}` : '(tidak dijawab)'}
-                            </p>
-                            {!isCorrect && (
-                              <p className="text-sm text-success mt-1">
-                                Jawaban Benar: {q.jawaban_benar}. {getOptionByKey(q, q.jawaban_benar)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
 
                 <Button className="w-full mt-4" onClick={closeQuiz}>
