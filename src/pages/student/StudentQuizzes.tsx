@@ -100,11 +100,11 @@ const StudentQuizzes: React.FC = () => {
     let totalPoints = 0;
 
     activeQuestions.forEach(question => {
-      totalPoints += question.skor;
+      totalPoints += question.skor_soal;
       const userAnswer = answers[question.id];
       
       if (userAnswer === question.jawaban_benar) {
-        score += question.skor;
+        score += question.skor_soal;
       }
     });
 
@@ -255,7 +255,7 @@ const StudentQuizzes: React.FC = () => {
                 <div className="py-6">
                   <p className="text-lg font-medium mb-4">{currentQuestion.pertanyaan}</p>
                   <Badge variant="outline" className="mb-4">
-                    {currentQuestion.skor} poin
+                    {currentQuestion.skor_soal} poin
                   </Badge>
 
                   <RadioGroup
