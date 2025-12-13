@@ -20,11 +20,34 @@ import {
   CheckCircle2,
   XCircle,
   ArrowLeft,
-  BookOpen
+  BookOpen,
+  Users
 } from 'lucide-react';
 import { getMateriByGuruApi } from '@/api/materi';
 import { getMataPelajaranApi } from '@/api/mataPelajaran';
-import { deleteKuisApi, deleteSoalkuis, getKuisByGuru, getSoalBuKuis, tambahKuisApi, tambahSoalKuisApi, ubahKuisApi, ubahSoalKuisApi } from '@/api/kuis';
+import { deleteKuisApi, deleteSoalkuis, getKuisByGuru, getSoalBuKuis, getSiswaDoneQuiz, getJawabanBySiswa, tambahKuisApi, tambahSoalKuisApi, ubahKuisApi, ubahSoalKuisApi } from '@/api/kuis';
+
+interface StudentDone {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface JawabanSiswa {
+  id: number;
+  id_soal: number;
+  id_siswa: number;
+  jawaban_siswa: string;
+  apakah_benar: string;
+  skor_jawaban: number;
+}
+
+interface StudentResult {
+  id_siswa: string;
+  total_skor: number;
+  jawaban: JawabanSiswa[];
+}
 
 const TeacherQuizzes: React.FC = () => {
   const { user } = useAuth();
@@ -37,6 +60,11 @@ const TeacherQuizzes: React.FC = () => {
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [showStudents, setShowStudents] = useState(false);
+  const [studentsDone, setStudentsDone] = useState<StudentDone[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<StudentDone | null>(null);
+  const [studentResult, setStudentResult] = useState<StudentResult | null>(null);
+  const [loadingStudents, setLoadingStudents] = useState(false);
 
   const [formData, setFormData] = useState({
     id_matapelajaran: '',
@@ -250,6 +278,189 @@ const TeacherQuizzes: React.FC = () => {
     });
   };
 
+  const loadStudentsDone = async () => {
+    if (!selectedQuiz) return;
+    setLoadingStudents(true);
+    try {
+      const response = await getSiswaDoneQuiz(selectedQuiz.id!);
+      if (response?.students) {
+        setStudentsDone(response.students);
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat daftar siswa',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const loadStudentResult = async (studentId: number) => {
+    try {
+      const response = await getJawabanBySiswa(studentId.toString());
+      if (response) {
+        setStudentResult(response);
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat hasil siswa',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleViewStudents = async () => {
+    setShowStudents(true);
+    setSelectedStudent(null);
+    setStudentResult(null);
+    await loadStudentsDone();
+  };
+
+  const handleSelectStudent = async (student: StudentDone) => {
+    setSelectedStudent(student);
+    await loadStudentResult(student.id);
+  };
+
+  const getQuestionById = (id_soal: number) => {
+    return questions.find(q => parseInt(q.id!) === id_soal);
+  };
+
+  // Student Result View
+  if (selectedQuiz && showStudents && selectedStudent && studentResult) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => {
+              setSelectedStudent(null);
+              setStudentResult(null);
+            }}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-foreground">Hasil: {selectedStudent.name}</h1>
+              <p className="text-muted-foreground mt-1">{selectedStudent.email}</p>
+            </div>
+          </div>
+
+          <Card className="glass">
+            <CardHeader>
+              <CardTitle className="text-2xl">Total Skor: {studentResult.total_skor}</CardTitle>
+            </CardHeader>
+          </Card>
+
+          <div className="space-y-4">
+            {studentResult.jawaban
+              .filter(j => {
+                const question = getQuestionById(j.id_soal);
+                return question && question.id_kuis === selectedQuiz.id;
+              })
+              .map((jawaban, idx) => {
+                const question = getQuestionById(jawaban.id_soal);
+                const isCorrect = jawaban.apakah_benar === 'benar';
+
+                return (
+                  <Card key={jawaban.id} className={`glass border-2 ${isCorrect ? 'border-green-500/50' : 'border-red-500/50'}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <Badge variant="secondary" className="mb-2">Soal {idx + 1}</Badge>
+                          <CardTitle className="text-lg">{question?.pertanyaan || 'Pertanyaan tidak ditemukan'}</CardTitle>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isCorrect ? (
+                            <Badge className="bg-green-500">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Benar (+{jawaban.skor_jawaban})
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive">
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Salah
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="p-3 rounded-lg bg-muted">
+                          <span className="font-medium">Jawaban Siswa:</span> {jawaban.jawaban_siswa}
+                        </div>
+                        {question && (
+                          <div className="p-3 rounded-lg bg-green-500/20 border border-green-500">
+                            <span className="font-medium">Jawaban Benar:</span> {question.jawaban_benar}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Students List View
+  if (selectedQuiz && showStudents) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setShowStudents(false)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-foreground">Siswa yang Mengerjakan</h1>
+              <p className="text-muted-foreground mt-1">{selectedQuiz.judul_kuis}</p>
+            </div>
+          </div>
+
+          {loadingStudents ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Memuat data...</p>
+            </div>
+          ) : studentsDone.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {studentsDone.map((student) => (
+                <Card
+                  key={student.id}
+                  className="glass cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+                  onClick={() => handleSelectStudent(student)}
+                >
+                  <CardHeader>
+                    <CardTitle className="text-lg">{student.name}</CardTitle>
+                    <CardDescription>{student.email}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Badge variant="secondary">Lihat Jawaban</Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="glass">
+              <CardContent className="py-12">
+                <div className="text-center">
+                  <Users className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground">Belum ada siswa</h3>
+                  <p className="text-muted-foreground mt-1">
+                    Belum ada siswa yang mengerjakan kuis ini
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Quiz Detail View
   if (selectedQuiz) {
     return (
@@ -266,6 +477,10 @@ const TeacherQuizzes: React.FC = () => {
                 {selectedQuiz.subjectName} • ID Guru: {selectedQuiz.id_guru}
               </p> */}
             </div>
+            <Button variant="outline" onClick={handleViewStudents}>
+              <Users className="h-4 w-4 mr-2" />
+              Lihat Siswa
+            </Button>
             <Dialog open={isQuestionDialogOpen} onOpenChange={(open) => {
               setIsQuestionDialogOpen(open);
               if (!open) resetQuestionForm();
