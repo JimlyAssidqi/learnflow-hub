@@ -22,7 +22,9 @@ export interface UserForAdmin {
 export interface Material {
   id?: number;
   mata_pelajaran_id: number;
+  mata_pelajaran?: string;
   teacher_id: string | number;
+  teacher?: {name: string};
   title: string;
   description: string;
   file: string; // saat GET: url/path file
@@ -112,5 +114,6 @@ export interface OfflineMaterial {
 export interface Subject {
   id: number;
   mata_pelajaran: string;
+  teacher_id: number;
   createdAt: string;
 }

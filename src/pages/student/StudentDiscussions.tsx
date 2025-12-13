@@ -15,6 +15,7 @@ import {
   Send,
   BookOpen
 } from 'lucide-react';
+import { getMataPelajaranApi } from '@/api/mataPelajaran';
 
 const StudentDiscussions: React.FC = () => {
   const { user } = useAuth();
@@ -27,13 +28,14 @@ const StudentDiscussions: React.FC = () => {
 
   useEffect(() => {
     const loadMaterials = async () => {
-      const allMaterials = await getAllItems<Material>('materials');
-      setMaterials(allMaterials);
+      const response = await getMataPelajaranApi();
+      setMaterials(response.data);
+      console.log(response.data);
       
       const materialParam = searchParams.get('material');
       if (materialParam) {
-        const found = allMaterials.find(m => String(m.id) === materialParam);
-        if (found) setSelectedMaterial(found);
+        // const found = allMaterials.find(m => String(m.id) === materialParam);
+        // if (found) setSelectedMaterial(found);
       }
     };
     loadMaterials();
@@ -114,13 +116,13 @@ const StudentDiscussions: React.FC = () => {
                           : 'hover:bg-muted'
                       }`}
                     >
-                      <p className="font-medium text-sm truncate">{material.title}</p>
+                      <p className="font-medium text-sm ">{material.mata_pelajaran}</p>
                       <p className={`text-xs mt-1 ${
                         selectedMaterial?.id === material.id
                           ? 'text-primary-foreground/80'
                           : 'text-muted-foreground'
                       }`}>
-                        by {material.teacherName}
+                        by {material.teacher.name}
                       </p>
                     </button>
                   ))}

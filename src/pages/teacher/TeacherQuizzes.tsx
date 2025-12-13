@@ -242,15 +242,7 @@ const TeacherQuizzes: React.FC = () => {
   };
 
   const handleDelete = async (quizId: string) => {
-    // await deleteItem('quizzes', quizId);
-    const response = await deleteKuisApi(quizId);
-    // Delete all questions for this quiz
-    // const quizQuestions = questions.filter(q => q.id_kuis === quizId);
-    // for (const question of quizQuestions) {
-    //   await deleteItem('questions', question.id);
-    // }
-    // setQuizzes(prev => prev.filter(q => q.id !== quizId));
-    console.log(response)
+    await deleteKuisApi(quizId);
     loadData();
     toast({
       title: 'Kuis dihapus',
@@ -259,7 +251,6 @@ const TeacherQuizzes: React.FC = () => {
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
-    // await deleteItem('questions', questionId);
     await deleteSoalkuis(questionId);
     loadQuestions();
     toast({

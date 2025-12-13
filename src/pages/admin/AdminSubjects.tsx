@@ -42,7 +42,7 @@ const AdminSubjects = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
-  const [formData, setFormData] = useState({ mata_pelajaran: '' });
+  const [formData, setFormData] = useState({ mata_pelajaran: '', teacher_id: null });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,10 +83,10 @@ const AdminSubjects = () => {
   const handleOpenDialog = (subject?: Subject) => {
     if (subject) {
       setEditingSubject(subject);
-      setFormData({ mata_pelajaran: subject.mata_pelajaran });
+      setFormData({ mata_pelajaran: subject.mata_pelajaran, teacher_id: subject.teacher_id });
     } else {
       setEditingSubject(null);
-      setFormData({ mata_pelajaran: '' });
+      setFormData({ mata_pelajaran: '', teacher_id: null });
     }
     setIsDialogOpen(true);
   };
@@ -94,7 +94,7 @@ const AdminSubjects = () => {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingSubject(null);
-    setFormData({ mata_pelajaran: '' });
+    setFormData({ mata_pelajaran: '', teacher_id: null });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,7 +113,7 @@ const AdminSubjects = () => {
       if (editingSubject) {
         const result = await ubahMataPelajaranApi(
           editingSubject.id,
-          { mata_pelajaran: formData.mata_pelajaran.trim() }
+          { mata_pelajaran: formData.mata_pelajaran.trim(), teacher_id: formData.teacher_id }
         );
         loadSubjects();
         if (result?.message) {
@@ -126,6 +126,7 @@ const AdminSubjects = () => {
         // 🔥 TAMBAH MATA PELAJARAN MENGGUNAKAN API
         const result = await tambahMataPelajaranApi({
           mata_pelajaran: formData.mata_pelajaran.trim(),
+          teacher_id: formData.teacher_id
         });
 
         toast({
@@ -269,7 +270,16 @@ const AdminSubjects = () => {
                 <Input
                   id="mata_pelajaran"
                   value={formData.mata_pelajaran}
-                  onChange={(e) => setFormData({ mata_pelajaran: e.target.value })}
+                  onChange={(e) => setFormData({ mata_pelajaran: e.target.value, teacher_id: formData.teacher_id })}
+                  placeholder="Masukkan nama mata pelajaran"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mata_pelajaran">Nama Guru</Label>
+                <Input
+                  id="mata_pelajaran"
+                  value={formData.mata_pelajaran}
+                  onChange={(e) => setFormData({ mata_pelajaran: e.target.value, teacher_id: formData.teacher_id })}
                   placeholder="Masukkan nama mata pelajaran"
                 />
               </div>

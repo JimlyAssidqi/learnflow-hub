@@ -3,6 +3,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 interface MataPelajaranData {
   mata_pelajaran: string;
+  teacher_id: number;
 }
 
 export const tambahMataPelajaranApi = async (data: MataPelajaranData) => {
@@ -35,6 +36,15 @@ export const hapusMataPelajaranApi = async (id: number) => {
 export const getMataPelajaranApi = async () => {
   try {
     const response = await axios.get(`${API_URL}/api/mata-pelajaran`);
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+}
+
+export const getMataPelajaranByGuruApi = async (id: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/mata-pelajaran/teacher/${id} `);
     return response.data;
   } catch (error) {
     return error.response.data;
