@@ -29,25 +29,51 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Pencil, Trash2, Library } from 'lucide-react';
-import { getAllItems, addItem, updateItem, deleteItem } from '@/lib/db';
 import { Subject } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { getMataPelajaranApi, hapusMataPelajaranApi, tambahMataPelajaranApi, ubahMataPelajaranApi } from '@/api/mataPelajaran';
+import { getUserTeacherApi } from '@/api/user';
+
+interface Teacher {
+  id: number;
+  name: string;
+  email: string;
+}
 
 const AdminSubjects = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
-  const [formData, setFormData] = useState({ mata_pelajaran: '', teacher_id: null });
+  const [formData, setFormData] = useState<{ mata_pelajaran: string; teacher_id: number | null }>({ mata_pelajaran: '', teacher_id: null });
   const { toast } = useToast();
 
   useEffect(() => {
     loadSubjects();
+    loadTeachers();
   }, []);
+
+  const loadTeachers = async () => {
+    try {
+      const result = await getUserTeacherApi();
+      if (result?.data) {
+        setTeachers(result.data);
+      }
+    } catch (error) {
+      console.error('Error loading teachers:', error);
+    }
+  };
 
   const loadSubjects = async () => {
     try {
@@ -270,18 +296,27 @@ const AdminSubjects = () => {
                 <Input
                   id="mata_pelajaran"
                   value={formData.mata_pelajaran}
-                  onChange={(e) => setFormData({ mata_pelajaran: e.target.value, teacher_id: formData.teacher_id })}
+                  onChange={(e) => setFormData({ ...formData, mata_pelajaran: e.target.value })}
                   placeholder="Masukkan nama mata pelajaran"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="mata_pelajaran">Nama Guru</Label>
-                <Input
-                  id="mata_pelajaran"
-                  value={formData.mata_pelajaran}
-                  onChange={(e) => setFormData({ mata_pelajaran: e.target.value, teacher_id: formData.teacher_id })}
-                  placeholder="Masukkan nama mata pelajaran"
-                />
+                <Label htmlFor="teacher_id">Guru Pengampu</Label>
+                <Select
+                  value={formData.teacher_id?.toString() || ''}
+                  onValueChange={(value) => setFormData({ ...formData, teacher_id: parseInt(value) })}
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Pilih guru pengampu" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    {teachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                        {teacher.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
