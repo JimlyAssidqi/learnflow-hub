@@ -102,3 +102,12 @@ export const getJawabanBySiswa = async (id: string) => {
     return error.response.data;
   }
 }
+
+export const getSiswaDoneQuiz = async (id: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/kuis/${id}/students-done`);
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+}

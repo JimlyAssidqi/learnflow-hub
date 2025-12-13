@@ -80,26 +80,26 @@ const StudentQuizzes: React.FC = () => {
   const [score, setScore] = useState({ correct: 0, total: 0 });
 
   useEffect(() => {
-    const init = async () => {
-      setLoading(true);
-      try {
-        const response = await getAllKuis();
-        if (response?.data) {
-          setQuizzes(response.data);
-          await loadAnswer(response.data);
-        }
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Gagal memuat daftar kuis',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    init();
+    loadKuis();
   }, []);
+  const loadKuis = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllKuis();
+      if (response?.data) {
+        setQuizzes(response.data);
+        await loadAnswer(response.data);
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat daftar kuis',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadAnswer = async (quizList: ApiQuiz[]) => {
     if (!user?.id) return;
@@ -210,21 +210,16 @@ const StudentQuizzes: React.FC = () => {
 
       // Submit each answer to the API
       for (const question of activeQuestions) {
-        // const jawaban = answers[question.id] || '';
-        // const response = await jawabSoalKuis({
-        //   id_soal: question.id,
-        //   id_siswa: parseInt(user.id),
-        //   jawaban_siswa: jawaban
-        // });
-        const pilihanHuruf = answers[question.id]; // "A" / "B" / "C" / "D"
-        const jawabanTeks = getOptionByKey(question, pilihanHuruf); // teks asli
+        const jawaban = answers[question.id]; // "A" / "B" / "C" / "D"
+        // const jawabanTeks = getOptionByKey(question, pilihanHuruf); // teks asli
+        // console.log(question, pilihanHuruf);
+        // console.log(pilihanHuruf);
 
-        const response = await jawabSoalKuis({
+        await jawabSoalKuis({
           id_soal: question.id,
           id_siswa: parseInt(user.id),
-          jawaban_siswa: jawabanTeks
+          jawaban_siswa: jawaban
         });
-        console.log(response)
       }
 
       // Calculate score locally for display
@@ -238,6 +233,7 @@ const StudentQuizzes: React.FC = () => {
 
       setScore({ correct: correctCount, total: activeQuestions.length });
       setShowResults(true);
+      loadKuis();
 
       toast({
         title: 'Kuis selesai!',
