@@ -8,14 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { getAllKuis, getSoalBuKuis, jawabSoalKuis } from '@/api/kuis';
+import { getAllKuis, getJawabanBySiswa, getSoalBuKuis, jawabSoalKuis } from '@/api/kuis';
 import { Quiz, Question } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { 
-  ClipboardList, 
-  Clock, 
-  CheckCircle2, 
+import {
+  ClipboardList,
+  Clock,
+  CheckCircle2,
   Play,
   Trophy,
   ArrowRight,
@@ -51,7 +51,7 @@ const StudentQuizzes: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
+
   const [activeQuiz, setActiveQuiz] = useState<ApiQuiz | null>(null);
   const [activeQuestions, setActiveQuestions] = useState<ApiQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -61,6 +61,7 @@ const StudentQuizzes: React.FC = () => {
 
   useEffect(() => {
     loadQuizzes();
+    loadAnswer();
   }, []);
 
   const loadQuizzes = async () => {
@@ -70,6 +71,49 @@ const StudentQuizzes: React.FC = () => {
       if (response?.data) {
         setQuizzes(response.data);
       }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat daftar kuis',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAnswer = async () => {
+    try {
+      setLoading(true);
+      const response = await getJawabanBySiswa(user?.id || '');
+      console.log(response);
+      // output
+      // {
+      //   "id_siswa": "4",
+      //     "total_skor": 50,
+      //       "jawaban": [
+      //         {
+      //           "id": 16,
+      //           "id_soal": 5,
+      //           "id_siswa": 4,
+      //           "jawaban_siswa": "benar",
+      //           "apakah_benar": "salah",
+      //           "skor_jawaban": 0,
+      //           "created_at": "2025-12-12T17:11:40.000000Z",
+      //           "updated_at": "2025-12-12T17:11:40.000000Z"
+      //         },
+      //         {
+      //           "id": 17,
+      //           "id_soal": 6,
+      //           "id_siswa": 4,
+      //           "jawaban_siswa": "benar",
+      //           "apakah_benar": "benar",
+      //           "skor_jawaban": 10,
+      //           "created_at": "2025-12-12T17:11:41.000000Z",
+      //           "updated_at": "2025-12-12T17:11:41.000000Z"
+      //         },
+      //       ]
+      // }
     } catch (error) {
       toast({
         title: 'Error',
@@ -134,11 +178,19 @@ const StudentQuizzes: React.FC = () => {
 
       // Submit each answer to the API
       for (const question of activeQuestions) {
-        const jawaban = answers[question.id] || '';
+        // const jawaban = answers[question.id] || '';
+        // const response = await jawabSoalKuis({
+        //   id_soal: question.id,
+        //   id_siswa: parseInt(user.id),
+        //   jawaban_siswa: jawaban
+        // });
+        const pilihanHuruf = answers[question.id]; // "A" / "B" / "C" / "D"
+        const jawabanTeks = getOptionByKey(question, pilihanHuruf); // teks asli
+
         const response = await jawabSoalKuis({
           id_soal: question.id,
           id_siswa: parseInt(user.id),
-          jawaban_siswa: jawaban
+          jawaban_siswa: jawabanTeks
         });
         console.log(response)
       }
@@ -268,13 +320,13 @@ const StudentQuizzes: React.FC = () => {
                 <DialogHeader>
                   <DialogTitle>{activeQuiz.judul_kuis}</DialogTitle>
                   <DialogDescription>
-                    Soal {currentQuestionIndex + 1} dari {activeQuestions.length} | 
+                    Soal {currentQuestionIndex + 1} dari {activeQuestions.length} |
                     Dijawab: {answeredCount}/{activeQuestions.length}
                   </DialogDescription>
                 </DialogHeader>
-                
-                <Progress 
-                  value={(currentQuestionIndex + 1) / activeQuestions.length * 100} 
+
+                <Progress
+                  value={(currentQuestionIndex + 1) / activeQuestions.length * 100}
                   className="h-2"
                 />
 
@@ -309,11 +361,11 @@ const StudentQuizzes: React.FC = () => {
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Sebelumnya
                   </Button>
-                  
+
                   <div className="flex gap-2">
                     {currentQuestionIndex === activeQuestions.length - 1 ? (
-                      <Button 
-                        onClick={submitQuiz} 
+                      <Button
+                        onClick={submitQuiz}
                         disabled={!allAnswered || submitting}
                       >
                         {submitting ? (
@@ -352,11 +404,10 @@ const StudentQuizzes: React.FC = () => {
                 </DialogHeader>
 
                 <div className="py-6 text-center">
-                  <div className={`text-6xl font-bold mb-2 ${
-                    (score.correct / score.total * 100) >= 70 ? 'text-success' :
+                  <div className={`text-6xl font-bold mb-2 ${(score.correct / score.total * 100) >= 70 ? 'text-success' :
                     (score.correct / score.total * 100) >= 50 ? 'text-accent' :
-                    'text-destructive'
-                  }`}>
+                      'text-destructive'
+                    }`}>
                     {Math.round(score.correct / score.total * 100)}%
                   </div>
                   <p className="text-muted-foreground">
