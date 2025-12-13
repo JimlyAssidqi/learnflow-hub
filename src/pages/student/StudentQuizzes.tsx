@@ -44,6 +44,24 @@ interface ApiQuestion {
   skor_soal: number;
 }
 
+interface JawabanSiswa {
+  id: number;
+  id_soal: number;
+  id_siswa: number;
+  jawaban_siswa: string;
+  apakah_benar: string;
+  skor_jawaban: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CompletedQuizResult {
+  quizId: number;
+  totalSkor: number;
+  jawaban: JawabanSiswa[];
+  questions: ApiQuestion[];
+}
+
 const StudentQuizzes: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,6 +69,8 @@ const StudentQuizzes: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [completedQuizzes, setCompletedQuizzes] = useState<Map<number, CompletedQuizResult>>(new Map());
+  const [viewingResult, setViewingResult] = useState<CompletedQuizResult | null>(null);
 
   const [activeQuiz, setActiveQuiz] = useState<ApiQuiz | null>(null);
   const [activeQuestions, setActiveQuestions] = useState<ApiQuestion[]>([]);
@@ -60,68 +80,72 @@ const StudentQuizzes: React.FC = () => {
   const [score, setScore] = useState({ correct: 0, total: 0 });
 
   useEffect(() => {
-    loadQuizzes();
-    loadAnswer();
+    const init = async () => {
+      setLoading(true);
+      try {
+        const response = await getAllKuis();
+        if (response?.data) {
+          setQuizzes(response.data);
+          await loadAnswer(response.data);
+        }
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Gagal memuat daftar kuis',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
-  const loadQuizzes = async () => {
+  const loadAnswer = async (quizList: ApiQuiz[]) => {
+    if (!user?.id) return;
+    
     try {
-      setLoading(true);
-      const response = await getAllKuis();
-      if (response?.data) {
-        setQuizzes(response.data);
+      const response = await getJawabanBySiswa(user.id);
+      if (response?.jawaban && response.jawaban.length > 0) {
+        // Group answers by quiz
+        const jawabanMap = new Map<number, JawabanSiswa[]>();
+        const soalIdSet = new Set<number>();
+        
+        response.jawaban.forEach((jawaban: JawabanSiswa) => {
+          soalIdSet.add(jawaban.id_soal);
+        });
+        
+        // For each quiz, check if it has answered questions
+        const completedMap = new Map<number, CompletedQuizResult>();
+        
+        for (const quiz of quizList) {
+          try {
+            const soalResponse = await getSoalBuKuis(quiz.id.toString());
+            if (soalResponse?.data) {
+              const quizSoalIds = soalResponse.data.map((s: ApiQuestion) => s.id);
+              const quizJawaban = response.jawaban.filter((j: JawabanSiswa) => 
+                quizSoalIds.includes(j.id_soal)
+              );
+              
+              if (quizJawaban.length > 0) {
+                const totalSkor = quizJawaban.reduce((acc: number, j: JawabanSiswa) => acc + j.skor_jawaban, 0);
+                completedMap.set(quiz.id, {
+                  quizId: quiz.id,
+                  totalSkor,
+                  jawaban: quizJawaban,
+                  questions: soalResponse.data
+                });
+              }
+            }
+          } catch (e) {
+            console.error('Error loading quiz questions:', e);
+          }
+        }
+        
+        setCompletedQuizzes(completedMap);
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Gagal memuat daftar kuis',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadAnswer = async () => {
-    try {
-      setLoading(true);
-      const response = await getJawabanBySiswa(user?.id || '');
-      console.log(response);
-      // output
-      // {
-      //   "id_siswa": "4",
-      //     "total_skor": 50,
-      //       "jawaban": [
-      //         {
-      //           "id": 16,
-      //           "id_soal": 5,
-      //           "id_siswa": 4,
-      //           "jawaban_siswa": "benar",
-      //           "apakah_benar": "salah",
-      //           "skor_jawaban": 0,
-      //           "created_at": "2025-12-12T17:11:40.000000Z",
-      //           "updated_at": "2025-12-12T17:11:40.000000Z"
-      //         },
-      //         {
-      //           "id": 17,
-      //           "id_soal": 6,
-      //           "id_siswa": 4,
-      //           "jawaban_siswa": "benar",
-      //           "apakah_benar": "benar",
-      //           "skor_jawaban": 10,
-      //           "created_at": "2025-12-12T17:11:41.000000Z",
-      //           "updated_at": "2025-12-12T17:11:41.000000Z"
-      //         },
-      //       ]
-      // }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Gagal memuat daftar kuis',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+      console.error('Error loading answers:', error);
     }
   };
 
@@ -151,6 +175,14 @@ const StudentQuizzes: React.FC = () => {
       });
     } finally {
       setLoadingQuestions(false);
+    }
+  };
+
+  const viewResult = (quiz: ApiQuiz) => {
+    const result = completedQuizzes.get(quiz.id);
+    if (result) {
+      setViewingResult(result);
+      setActiveQuiz(quiz);
     }
   };
 
@@ -227,6 +259,7 @@ const StudentQuizzes: React.FC = () => {
     setActiveQuestions([]);
     setShowResults(false);
     setScore({ correct: 0, total: 0 });
+    setViewingResult(null);
   };
 
   const currentQuestion = activeQuestions[currentQuestionIndex];
@@ -265,41 +298,78 @@ const StudentQuizzes: React.FC = () => {
 
         {/* Quizzes Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {quizzes.map((quiz) => (
-            <Card key={quiz.id} className="glass glass-hover">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">{quiz.judul_kuis}</CardTitle>
-                <CardDescription className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Mata Pelajaran ID: {quiz.id_matapelajaran}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {new Date(quiz.created_at).toLocaleDateString('id-ID')}
-                    </span>
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={() => startQuiz(quiz)}
-                    disabled={loadingQuestions}
-                  >
-                    {loadingQuestions ? (
-                      <LoadingSpinner size="sm" />
-                    ) : (
-                      <>
-                        <Play className="h-4 w-4 mr-2" />
-                        Mulai Kuis
-                      </>
+          {quizzes.map((quiz) => {
+            const isCompleted = completedQuizzes.has(quiz.id);
+            const result = completedQuizzes.get(quiz.id);
+            
+            return (
+              <Card key={quiz.id} className="glass glass-hover">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{quiz.judul_kuis}</CardTitle>
+                    {isCompleted && (
+                      <Badge variant="secondary" className="bg-green-500/20 text-green-600">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Selesai
+                      </Badge>
                     )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </div>
+                  <CardDescription className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Mata Pelajaran ID: {quiz.id_matapelajaran}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {new Date(quiz.created_at).toLocaleDateString('id-ID')}
+                      </span>
+                      {isCompleted && result && (
+                        <span className="flex items-center gap-1 text-primary font-medium">
+                          <Trophy className="h-4 w-4" />
+                          Skor: {result.totalSkor}
+                        </span>
+                      )}
+                    </div>
+                    {isCompleted ? (
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => viewResult(quiz)}
+                        disabled={loadingQuestions}
+                      >
+                        {loadingQuestions ? (
+                          <LoadingSpinner size="sm" />
+                        ) : (
+                          <>
+                            <Trophy className="h-4 w-4 mr-2" />
+                            Lihat Hasil
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        onClick={() => startQuiz(quiz)}
+                        disabled={loadingQuestions}
+                      >
+                        {loadingQuestions ? (
+                          <LoadingSpinner size="sm" />
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4 mr-2" />
+                            Mulai Kuis
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {quizzes.length === 0 && (
@@ -313,9 +383,74 @@ const StudentQuizzes: React.FC = () => {
         )}
 
         {/* Quiz Dialog */}
-        <Dialog open={!!activeQuiz} onOpenChange={() => !showResults && !submitting && closeQuiz()}>
+        <Dialog open={!!activeQuiz} onOpenChange={() => !showResults && !submitting && !viewingResult && closeQuiz()}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            {!showResults && activeQuiz && currentQuestion && (
+            {/* View Result Mode */}
+            {viewingResult && activeQuiz && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Trophy className="h-6 w-6 text-accent" />
+                    Hasil: {activeQuiz.judul_kuis}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Total Skor: <span className="font-bold text-primary">{viewingResult.totalSkor}</span>
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-4">
+                  {viewingResult.questions.map((question, index) => {
+                    const jawaban = viewingResult.jawaban.find(j => j.id_soal === question.id);
+                    const isCorrect = jawaban?.apakah_benar === 'benar';
+                    
+                    return (
+                      <div 
+                        key={question.id} 
+                        className={`p-4 rounded-lg border ${
+                          isCorrect 
+                            ? 'border-green-500/50 bg-green-500/10' 
+                            : 'border-red-500/50 bg-red-500/10'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <p className="font-medium">
+                            {index + 1}. {question.pertanyaan}
+                          </p>
+                          <Badge variant={isCorrect ? 'default' : 'destructive'} className={isCorrect ? 'bg-green-500' : ''}>
+                            {jawaban?.skor_jawaban || 0} poin
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-1 text-sm">
+                          <p className="text-muted-foreground">
+                            Jawaban Anda: <span className={isCorrect ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                              {jawaban?.jawaban_siswa || '-'}
+                            </span>
+                            {isCorrect ? (
+                              <CheckCircle2 className="h-4 w-4 inline ml-2 text-green-500" />
+                            ) : (
+                              <span className="ml-2 text-red-500">✕</span>
+                            )}
+                          </p>
+                          {!isCorrect && (
+                            <p className="text-muted-foreground">
+                              Jawaban Benar: <span className="text-green-600 font-medium">{question.jawaban_benar}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <Button className="w-full mt-4" onClick={closeQuiz}>
+                  Tutup
+                </Button>
+              </>
+            )}
+
+            {/* Take Quiz Mode */}
+            {!showResults && !viewingResult && activeQuiz && currentQuestion && (
               <>
                 <DialogHeader>
                   <DialogTitle>{activeQuiz.judul_kuis}</DialogTitle>
