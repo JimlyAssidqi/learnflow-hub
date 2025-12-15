@@ -25,6 +25,7 @@ import TeacherMaterials from "./pages/teacher/TeacherMaterials";
 import TeacherQuizzes from "./pages/teacher/TeacherQuizzes";
 import TeacherStudents from "./pages/teacher/TeacherStudents";
 import TeacherAnalytics from "./pages/teacher/TeacherAnalytics";
+import TeacherDiscussions from "./pages/teacher/TeacherDiscussions";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -99,6 +100,11 @@ const App = () => (
             <Route path="/teacher/analytics" element={
               <ProtectedRoute allowedRoles={['teacher']}>
                 <TeacherAnalytics />
+              </ProtectedRoute>
+            } />
+            <Route path="/teacher/discussions" element={
+              <ProtectedRoute allowedRoles={['teacher']}>
+                <TeacherDiscussions />
               </ProtectedRoute>
             } />
 

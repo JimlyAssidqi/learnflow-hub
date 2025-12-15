@@ -51,7 +51,7 @@ const getNavItems = (role: string): NavItem[] => {
         { label: 'Materi', href: '/teacher/materials', icon: BookOpen },
         { label: 'Kuis', href: '/teacher/quizzes', icon: ClipboardList },
         { label: 'Siswa', href: '/teacher/students', icon: GraduationCap },
-        // { label: 'Analytics', href: '/teacher/analytics', icon: BarChart3 },
+        { label: 'Diskusi', href: '/teacher/discussions', icon: MessageSquare },
       ];
     case 'student':
     default:
