@@ -19,7 +19,8 @@ import {
   MessageSquare,
   Library,
   ArrowLeft,
-  FileType
+  FileType,
+  BookOpenIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getMataPelajaranApi } from '@/api/mataPelajaran';
@@ -213,14 +214,14 @@ const StudentMaterials: React.FC = () => {
                 <Card key={material.id} className="glass glass-hover">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
-                      <Badge className={typeColors[material.file_type || ''] || 'bg-secondary'}>
+                      <Badge className={'bg-blue-200 text-blue-600'}>
                         <Icon className="h-3 w-3 mr-1" />
                         {(material.file_type || 'file').toUpperCase()}
                       </Badge>
                       {isOffline && (
                         <Badge variant="outline" className="text-success border-success">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Saved
+                          Tersimpan
                         </Badge>
                       )}
                     </div>
@@ -232,7 +233,7 @@ const StudentMaterials: React.FC = () => {
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>by {material.teacherName || 'Teacher'}</span>
+                        {/* <span>by {material.teacherName || 'Teacher'}</span> */}
                         {material.fileSize && <span>{formatFileSize(material.fileSize)}</span>}
                       </div>
                       <div className="flex gap-2">
@@ -241,8 +242,8 @@ const StudentMaterials: React.FC = () => {
                           onClick={() => handleDownload(material)}
                           disabled={downloading === material.id}
                         >
-                          <Download className="h-4 w-4 mr-2" />
-                          {downloading === material.id ? 'Downloading...' : 'Mulai'}
+                          <BookOpenIcon className="h-4 w-4 mr-2" />
+                          {downloading === material.id ? 'Memuat...' : 'Buka'}
                         </Button>
                         <Button variant="outline" size="icon" asChild>
                           <Link to={`/student/discussions?material=${material.id}`}>
@@ -259,10 +260,10 @@ const StudentMaterials: React.FC = () => {
         ) : (
           <div className="text-center py-12">
             <BookOpen className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground">No materials found</h3>
-            <p className="text-muted-foreground mt-1">
+            <h3 className="text-lg font-medium text-foreground">Materi belum tersedia</h3>
+            {/* <p className="text-muted-foreground mt-1">
               {searchQuery ? 'Try a different search term' : 'Check back later for new content'}
-            </p>
+            </p> */}
           </div>
         )}
       </div>

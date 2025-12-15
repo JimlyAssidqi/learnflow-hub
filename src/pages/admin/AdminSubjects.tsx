@@ -66,9 +66,10 @@ const AdminSubjects = () => {
 
   const loadTeachers = async () => {
     try {
-      const result = await getUserTeacherApi();
-      if (result?.data) {
-        setTeachers(result.data);
+      const response = await getUserTeacherApi();
+      console.log(response.teachers)
+      if (response?.teachers) {
+        setTeachers(response.teachers);
       }
     } catch (error) {
       console.error('Error loading teachers:', error);

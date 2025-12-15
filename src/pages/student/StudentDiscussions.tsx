@@ -16,6 +16,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { getMataPelajaranApi } from '@/api/mataPelajaran';
+import { getMessageApi, sendMessageApi } from '@/api/chat';
 
 const StudentDiscussions: React.FC = () => {
   const { user } = useAuth();
@@ -42,19 +43,19 @@ const StudentDiscussions: React.FC = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    const loadMessages = async () => {
-      if (!selectedMaterial) return;
-      const materialMessages = await getItemsByIndex<ChatMessage>(
-        'chatMessages', 
-        'materialId', 
-        String(selectedMaterial.id)
-      );
-      setMessages(materialMessages.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      ));
-    };
     loadMessages();
   }, [selectedMaterial]);
+
+  const loadMessages = async () => {
+    if (!selectedMaterial) return;
+    // const materialMessages = await getItemsByIndex<ChatMessage>(
+    //   'chatMessages', 
+    //   'materialId', 
+    //   String(selectedMaterial.id)
+    const materialMessages = await getMessageApi(selectedMaterial.id);
+    console.log(materialMessages);
+    setMessages(materialMessages?.data);
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -65,19 +66,18 @@ const StudentDiscussions: React.FC = () => {
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedMaterial || !user) return;
 
-    const message: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      materialId: String(selectedMaterial.id),
-      userId: user.id,
-      userName: user.name,
-      userRole: user.role,
+    const message = {
+      id_mata_pelajaran: String(selectedMaterial.id),
+      id_user: user.id,
       message: newMessage.trim(),
-      createdAt: new Date().toISOString(),
     };
 
-    await addItem('chatMessages', message);
-    setMessages(prev => [...prev, message]);
+
+    // await addItem('chatMessages', message);
+    await sendMessageApi(message);
+    // setMessages(prev => [...prev, message]);
     setNewMessage('');
+    loadMessages();
   };
 
   const formatTime = (dateStr: string) => {

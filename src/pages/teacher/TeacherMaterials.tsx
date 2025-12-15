@@ -23,9 +23,11 @@ import {
   Download,
   Library,
   ArrowLeft,
-  FileType
+  FileType,
+  ChevronRight,
+  BookOpenCheck
 } from 'lucide-react';
-import { getMataPelajaranApi } from '@/api/mataPelajaran';
+import { getMataPelajaranApi, getMataPelajaranByGuruApi } from '@/api/mataPelajaran';
 import { getMateriByGuruAndMapelApi, getMateriByMataPelajaranApi, hapusMateriApi, tambahMateriApi } from '@/api/materi';
 import { Link } from 'react-router-dom';
 
@@ -56,7 +58,7 @@ const TeacherMaterials: React.FC = () => {
   }, []);
   
   const loadSubjects = async () => {
-    const allSubjects = await getMataPelajaranApi();
+    const allSubjects = await getMataPelajaranByGuruApi(user?.id || '');
     setSubjects(allSubjects.data);
   };
 
@@ -312,9 +314,9 @@ const TeacherMaterials: React.FC = () => {
                         to={`${API_URL}/${material.file_url}`}
                         target="_blank"
                         rel="noopener noreferrer">
-                          <span className="flex items-center gap-1">
-                            <Download className="h-4 w-4" />
-                            {material.downloadCount} downloads
+                          <span className="flex items-center gap-1 underline">
+                            <BookOpen className="h-4 w-4" />
+                            {material.downloadCount} buka
                           </span>
                         </Link>
                       {/* <span>{formatFileSize(material.fileSize)}</span> */}

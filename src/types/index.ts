@@ -83,13 +83,13 @@ export interface QuizAttempt {
 }
 
 export interface ChatMessage {
-  id: string;
-  materialId: string;
-  userId: string;
-  userName: string;
-  userRole: UserRole;
-  message: string;
-  createdAt: string;
+  id?: string;
+  materialId?: string;
+  userId?: string;
+  userName?: string;
+  userRole?: UserRole;
+  message?: string;
+  createdAt?: string;
 }
 
 export interface StudentProgress {

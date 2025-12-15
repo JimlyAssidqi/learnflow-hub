@@ -103,7 +103,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               <GraduationCap className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="hidden font-outfit text-xl font-bold text-foreground md:block">
-              EduLearn
+              ELLS
             </span>
           </Link>
 
