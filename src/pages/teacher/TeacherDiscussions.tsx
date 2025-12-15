@@ -39,7 +39,7 @@ interface MessageData {
   };
 }
 
-const StudentDiscussions: React.FC = () => {
+const TeacherDiscussions: React.FC = () => {
   const { user } = useAuth();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -248,4 +248,4 @@ const StudentDiscussions: React.FC = () => {
   );
 };
 
-export default StudentDiscussions;
+export default TeacherDiscussions;
