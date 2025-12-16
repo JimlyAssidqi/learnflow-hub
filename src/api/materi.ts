@@ -33,6 +33,15 @@ export const getMateriByMataPelajaranApi = async (id: number) => {
   }
 }
 
+export const getAllMateriApi = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/materi`);
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+}
+
 export const getMateriByGuruApi = async (id: string) => {
   try {
     const response = await axios.get(`${API_URL}/api/materi/teacher/${id}`);

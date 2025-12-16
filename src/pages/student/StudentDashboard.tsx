@@ -17,6 +17,9 @@ import {
   CheckCircle2,
   ArrowRight
 } from 'lucide-react';
+import { getMataPelajaranApi } from '@/api/mataPelajaran';
+import { getAllMateriApi } from '@/api/materi';
+import { getAllKuis } from '@/api/kuis';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -30,14 +33,14 @@ const StudentDashboard: React.FC = () => {
       if (!user) return;
       
       const [allMaterials, allQuizzes, userAttempts, offline] = await Promise.all([
-        getAllItems<Material>('materials'),
-        getAllItems<Quiz>('quizzes'),
+        getAllMateriApi(),
+        getAllKuis(),
         getItemsByIndex<QuizAttempt>('quizAttempts', 'studentId', user.id),
         getAllItems<OfflineMaterial>('offlineMaterials'),
       ]);
 
-      setMaterials(allMaterials);
-      setQuizzes(allQuizzes.filter(q => q.isPublished));
+      setMaterials(allMaterials?.materis)
+      setQuizzes(allQuizzes?.data)
       setAttempts(userAttempts);
       setOfflineMaterials(offline);
     };
@@ -60,8 +63,9 @@ const StudentDashboard: React.FC = () => {
       bgColor: 'bg-primary/10',
     },
     {
-      label: 'Kuis Diselesaikan',
-      value: `${completedQuizzes}/${totalQuizzes}`,
+      label: 'Kuis Tersedia',
+      // value: `${completedQuizzes}/${totalQuizzes}`,
+      value: `${totalQuizzes}`,
       icon: ClipboardList,
       color: 'text-success',
       bgColor: 'bg-success/10',

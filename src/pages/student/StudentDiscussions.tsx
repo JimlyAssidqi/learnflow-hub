@@ -7,14 +7,15 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  MessageSquare, 
+import {
+  MessageSquare,
   Send,
   BookOpen,
   ArrowLeft
 } from 'lucide-react';
 import { getMataPelajaranApi } from '@/api/mataPelajaran';
 import { getMessageApi, sendMessageApi } from '@/api/chat';
+import echo from "@/lib/echo";
 
 interface Subject {
   id: number;
@@ -47,6 +48,8 @@ const StudentDiscussions: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
 
   useEffect(() => {
     const loadSubjects = async () => {
@@ -76,10 +79,30 @@ const StudentDiscussions: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!selectedSubject) return;
+
+    const channelName = `diskusi.${selectedSubject.id}`;
+
+    echo.channel(channelName)
+      .listen(".diskusi.message", (e: any) => {
+        setMessages((prev) => [...prev, e.diskusi]);
+      });
+
+    return () => {
+      echo.leave(channelName);
+    };
+  }, [selectedSubject]);
+
+  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedSubject || !user) return;
@@ -87,12 +110,13 @@ const StudentDiscussions: React.FC = () => {
     const message = {
       id_mata_pelajaran: String(selectedSubject.id),
       id_user: user.id,
-      message: newMessage.trim(),
+      pesan: newMessage.trim(),
     };
 
-    await sendMessageApi(message);
+    const response = await sendMessageApi(message);
+    console.log(response)
     setNewMessage('');
-    loadMessages();
+    // loadMessages();
   };
 
   const formatTime = (dateStr: string) => {
@@ -131,8 +155,8 @@ const StudentDiscussions: React.FC = () => {
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {subjects.map((subject) => (
-                <Card 
-                  key={subject.id} 
+                <Card
+                  key={subject.id}
                   className="glass cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
                   onClick={() => handleSelectSubject(subject)}
                 >
@@ -201,17 +225,17 @@ const StudentDiscussions: React.FC = () => {
                               {formatTime(msg.created_at)}
                             </span>
                           </div>
-                          <div className={`rounded-lg px-3 py-2 ${
-                            isOwn 
-                              ? 'bg-primary text-primary-foreground' 
+                          <div className={`rounded-lg px-3 py-2 ${isOwn
+                              ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
-                          }`}>
+                            }`}>
                             <p className="text-sm">{msg.pesan}</p>
                           </div>
                         </div>
                       </div>
                     );
                   })}
+                  <div ref={bottomRef} />
                   {messages.length === 0 && !loading && (
                     <div className="text-center py-12">
                       <MessageSquare className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
@@ -225,7 +249,7 @@ const StudentDiscussions: React.FC = () => {
 
               {/* Message Input */}
               <div className="p-4 border-t border-border">
-                <form 
+                <form
                   onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
                   className="flex gap-2"
                 >

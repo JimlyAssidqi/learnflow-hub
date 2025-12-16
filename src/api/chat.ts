@@ -3,7 +3,7 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 
 
-export const sendMessageApi = async (data: ChatMessage) => {
+export const sendMessageApi = async (data: { id_mata_pelajaran: string; id_user: string; pesan: string }) => {
   try {
     const response = await axios.post(`${API_URL}/api/diskusi`, data);
     return response.data;

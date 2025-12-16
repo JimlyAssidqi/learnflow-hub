@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRef, useEffect } from 'react';
-import logo from '../../public/img/logo-ells.svg'
+import logo from '../../public/img/logo.png'
 import {
   GraduationCap,
   BookOpen,
@@ -19,33 +19,33 @@ import {
 const features = [
   {
     icon: BookOpen,
-    title: 'Rich Learning Materials',
-    description: 'Access PDFs, presentations, and videos uploaded by expert teachers.',
+    title: 'Materi Pembelajaran',
+    description: 'Akses PDF, presentasi, dan video yang diunggah oleh guru.',
   },
   {
     icon: ClipboardList,
-    title: 'Interactive Quizzes',
-    description: 'Test your knowledge with auto-graded quizzes and instant feedback.',
+    title: 'Kuis Interaktif',
+    description: 'Uji pengetahuan Anda dengan kuis yang dinilai otomatis dan umpan balik instan.',
   },
   {
     icon: MessageSquare,
-    title: 'Discussion Forums',
-    description: 'Engage with teachers and peers through material-specific discussions.',
+    title: 'Forum Diskusi',
+    description: 'Berinteraksi dengan guru dan teman melalui diskusi spesifik materi.',
   },
   {
     icon: Download,
-    title: 'Offline Access',
-    description: 'Download materials and study anytime, even without internet.',
+    title: 'Akses Offline',
+    description: 'Unduh materi dan belajar kapan saja, bahkan tanpa internet.',
   },
   {
     icon: Users,
-    title: 'Progress Tracking',
-    description: 'Monitor your learning journey with detailed analytics.',
+    title: 'Pelacakan Kemajuan',
+    description: 'Pantau perjalanan belajar Anda dengan analisis terperinci.',
   },
   {
     icon: Sparkles,
-    title: 'Modern Interface',
-    description: 'Enjoy a beautiful, intuitive learning experience.',
+    title: 'Antarmuka Modern',
+    description: 'Nikmati pengalaman belajar yang indah dan intuitif.',
   },
 ];
 
@@ -73,7 +73,7 @@ const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      {/* <section className="relative overflow-hidden py-20 md:py-52">
+      <section className="relative overflow-hidden py-20 md:py-52">
         <div className="container relative mx-auto px-4 text-center">
           <div className="animate-slide-up">
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
@@ -83,12 +83,11 @@ const LandingPage: React.FC = () => {
             
             <h1 className="text-4xl md:text-6xl font-bold text-foreground max-w-4xl mx-auto leading-tight">
               Success Spirit{' '}
-              <span className="text-primary">Creative.</span>
+              <span className="text-blue-600 font-extrabold">Creative.</span>
             </h1>
             
             <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              A comprehensive e-learning platform with rich materials, interactive quizzes, 
-              real-time discussions, and offline access for seamless learning.
+              Akses kumpulan materi, evaluasi mandiri melalui kuis, sesi diskusi terjadwal, dan mudah diakses dimanapun untuk melanjutkan proses belajar.
             </p>
             
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -101,12 +100,11 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </section> */}
+      </section>
 
-      <section className="w-full min-h-screen flex items-center justify-center px-8 py-12">
+      {/* <section className="w-full min-h-screen flex items-center justify-center px-8 py-12">
         <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
 
-          {/* TEXT LEFT */}
           <div>
             <h1 className="text-5xl md:text-6xl font-bold leading-tight text-gray-900">
               Success
@@ -132,7 +130,6 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
 
-          {/* RIGHT IMAGE */}
           <div className="flex justify-center">
             <img
               src={logo}
@@ -142,17 +139,17 @@ const LandingPage: React.FC = () => {
           </div>
 
         </div>
-      </section>
+      </section> */}
 
       {/* Features Section */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-              Everything You Need to Learn
+              Semua yang Anda Butuhkan untuk Belajar
             </h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Powerful features designed for modern education
+              Fitur-fitur canggih yang dirancang untuk pendidikan modern
             </p>
           </div>
 
