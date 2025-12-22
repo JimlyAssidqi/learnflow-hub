@@ -13,8 +13,10 @@ import {
   BookOpen,
   ArrowLeft
 } from 'lucide-react';
-import { getMataPelajaranApi } from '@/api/mataPelajaran';
+import { getMataPelajaranApi, getMataPelajaranByGuruApi } from '@/api/mataPelajaran';
 import { getMessageApi, sendMessageApi } from '@/api/chat';
+import echo from "@/lib/echo";
+
 
 interface Subject {
   id: number;
@@ -47,10 +49,13 @@ const TeacherDiscussions: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  
 
   useEffect(() => {
     const loadSubjects = async () => {
-      const response = await getMataPelajaranApi();
+      const response = await getMataPelajaranByGuruApi(user?.id as string);
+      console.log(response);
       setSubjects(response.data || []);
     };
     loadSubjects();
@@ -75,11 +80,30 @@ const TeacherDiscussions: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    useEffect(() => {
+      if (!selectedSubject) return;
+  
+      const channelName = `diskusi.${selectedSubject.id}`;
+  
+      echo.channel(channelName)
+        .listen(".diskusi.message", (e: any) => {
+          setMessages((prev) => [...prev, e.diskusi]);
+        });
+  
+      return () => {
+        echo.leave(channelName);
+      };
+    }, [selectedSubject]);
+
+    useEffect(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    }, [messages]);
+  
+    useEffect(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedSubject || !user) return;
@@ -87,12 +111,13 @@ const TeacherDiscussions: React.FC = () => {
     const message = {
       id_mata_pelajaran: String(selectedSubject.id),
       id_user: user.id,
-      message: newMessage.trim(),
+      pesan: newMessage.trim(),
     };
 
-    await sendMessageApi(message);
+    const response = await sendMessageApi(message);
+    console.log(response)
     setNewMessage('');
-    loadMessages();
+    // loadMessages();
   };
 
   const formatTime = (dateStr: string) => {
@@ -144,7 +169,7 @@ const TeacherDiscussions: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground">
-                      Pengajar: {subject.teacher?.name || 'Tidak ada'}
+                      {/* Pengajar: {subject.teacher?.name || 'Tidak ada'} */}
                     </p>
                   </CardContent>
                 </Card>
@@ -170,7 +195,7 @@ const TeacherDiscussions: React.FC = () => {
                     {selectedSubject.mata_pelajaran}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Pengajar: {selectedSubject.teacher?.name}
+                    {/* Pengajar: {selectedSubject.teacher?.name} */}
                   </p>
                 </div>
               </div>
@@ -212,6 +237,7 @@ const TeacherDiscussions: React.FC = () => {
                       </div>
                     );
                   })}
+                  <div ref={bottomRef} />
                   {messages.length === 0 && !loading && (
                     <div className="text-center py-12">
                       <MessageSquare className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />

@@ -74,7 +74,7 @@ const TeacherStudents: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{students.length}</p>
-                  <p className="text-xs text-muted-foreground">Total Students</p>
+                  <p className="text-xs text-muted-foreground">Total Siswa</p>
                 </div>
               </div>
             </CardContent>
@@ -84,8 +84,8 @@ const TeacherStudents: React.FC = () => {
         {/* Students List */}
         <Card className="glass">
           <CardHeader>
-            <CardTitle>All Students</CardTitle>
-            <CardDescription>Individual student performance</CardDescription>
+            <CardDescription>Daftar Semu Siswa</CardDescription>
+            {/* <CardDescription>Individual student performance</CardDescription> */}
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

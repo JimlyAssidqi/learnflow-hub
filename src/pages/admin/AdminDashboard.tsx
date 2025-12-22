@@ -17,32 +17,40 @@ import {
   GraduationCap,
   UserCog
 } from 'lucide-react';
+import { getUserApi, getUserStudentApi, getUserTeacherApi } from '@/api/user';
+import { getAllMateriApi } from '@/api/materi';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [students, setStudents] = useState<User[]>([]);
+  const [teachers, setTeachers] = useState<User[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
-      const [allUsers, allMaterials, allQuizzes] = await Promise.all([
-        getAllItems<User>('users'),
-        getAllItems<Material>('materials'),
+      const [allUsers, allMaterials, allQuizzes, allStudents, allTeachers] = await Promise.all([
+        getUserApi(),
+        getAllMateriApi(),
         getAllItems<Quiz>('quizzes'),
+        getUserStudentApi(),
+        getUserTeacherApi()
       ]);
 
-      setUsers(allUsers);
-      setMaterials(allMaterials);
+      setUsers(allUsers.users);
+      setMaterials(allMaterials.materis);
       setQuizzes(allQuizzes);
+      setStudents(allStudents.students);
+      setTeachers(allTeachers.teachers);
     };
 
     loadData();
   }, []);
 
-  const studentCount = users.filter(u => u.role === 'student').length;
-  const teacherCount = users.filter(u => u.role === 'teacher').length;
-  const adminCount = users.filter(u => u.role === 'admin').length;
+  // const studentCount = users.filter(u => u.role === 'student').length;
+  // const teacherCount = users.filter(u => u.role === 'teacher').length;
+  // const adminCount = users.filter(u => u.role === 'admin').length;
 
   const stats = [
     {
@@ -53,21 +61,21 @@ const AdminDashboard: React.FC = () => {
       bgColor: 'bg-primary/10',
     },
     {
-      label: 'Students',
-      value: studentCount,
+      label: 'Siswa',
+      value: students.length,
       icon: GraduationCap,
       color: 'text-success',
       bgColor: 'bg-success/10',
     },
     {
-      label: 'Teachers',
-      value: teacherCount,
+      label: 'Guru',
+      value: teachers.length,
       icon: UserCog,
       color: 'text-accent',
       bgColor: 'bg-accent/10',
     },
     {
-      label: 'Total Content',
+      label: 'Jumlah Materi',
       value: materials.length + quizzes.length,
       icon: BookOpen,
       color: 'text-info',
@@ -85,7 +93,7 @@ const AdminDashboard: React.FC = () => {
               Admin Dashboard 🛡️
             </h1>
             <p className="text-muted-foreground mt-1">
-              Manage users, content, and system settings.
+              Kelola users, konten, and sistem.
             </p>
           </div>
           <Button asChild>
@@ -118,7 +126,7 @@ const AdminDashboard: React.FC = () => {
         {/* Quick Actions & User List */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Quick Actions */}
-          <Card className="glass">
+          {/* <Card className="glass">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
@@ -155,10 +163,10 @@ const AdminDashboard: React.FC = () => {
                 </Button>
               </Link>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Recent Users */}
-          <Card className="glass">
+          {/* <Card className="glass">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
@@ -190,19 +198,19 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* Content Overview */}
         <Card className="glass">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Content Overview</CardTitle>
-              <CardDescription>All materials and quizzes in the system</CardDescription>
+              <CardTitle>Ringkasan Konten</CardTitle>
+              <CardDescription>Semua materi dan kuis </CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/admin/content">
-                View all
+              <Link to="/admin/subjects">
+                Lihat Semua
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -212,24 +220,24 @@ const AdminDashboard: React.FC = () => {
               <div className="p-4 rounded-lg bg-muted/50">
                 <div className="flex items-center gap-3 mb-3">
                   <BookOpen className="h-5 w-5 text-primary" />
-                  <span className="font-medium">Materials</span>
+                  <span className="font-medium">Materi</span>
                 </div>
                 <p className="text-3xl font-bold">{materials.length}</p>
                 <p className="text-sm text-muted-foreground">
-                  {materials.filter(m => m.file_type === 'pdf').length} PDFs, {' '}
+                  {/* {materials.filter(m => m.file_type === 'pdf').length} PDFs, {' '}
                   {materials.filter(m => m.file_type === 'ppt').length} PPTs, {' '}
-                  {materials.filter(m => m.file_type === 'video').length} Videos
+                  {materials.filter(m => m.file_type === 'video').length} Videos */}
                 </p>
               </div>
               <div className="p-4 rounded-lg bg-muted/50">
                 <div className="flex items-center gap-3 mb-3">
                   <ClipboardList className="h-5 w-5 text-success" />
-                  <span className="font-medium">Quizzes</span>
+                  <span className="font-medium">Kuis</span>
                 </div>
                 <p className="text-3xl font-bold">{quizzes.length}</p>
                 <p className="text-sm text-muted-foreground">
-                  {quizzes.filter(q => q.isPublished).length} Published, {' '}
-                  {quizzes.filter(q => !q.isPublished).length} Drafts
+                  {/* {quizzes.filter(q => q.isPublished).length} Publis {' '} */}
+                  {/* {quizzes.filter(q => !q.isPublished).length} Drafts */}
                 </p>
               </div>
             </div>

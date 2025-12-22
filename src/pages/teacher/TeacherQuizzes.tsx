@@ -773,7 +773,8 @@ const TeacherQuizzes: React.FC = () => {
                       {quiz.isPublished ? (
                         <><CheckCircle2 className="h-3 w-3 mr-1" />Published</>
                       ) : (
-                        <><XCircle className="h-3 w-3 mr-1" />Draft</>
+                        <><CheckCircle2 className="h-3 w-3 mr-1" />Published</>
+                        // <><XCircle className="h-3 w-3 mr-1" />Draft</>
                       )}
                     </Badge>
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
@@ -804,7 +805,7 @@ const TeacherQuizzes: React.FC = () => {
                 <CardContent>
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>ID Guru: {quiz.id_guru}</span>
-                    <span>{quiz.timeLimit || 15} menit</span>
+                    {/* <span>{quiz.timeLimit || 15} menit</span> */}
                   </div>
                 </CardContent>
               </Card>

@@ -59,7 +59,7 @@ const LandingPage: React.FC = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
               <GraduationCap className="h-5 w-5 text-primary-foreground" />
             </div>
-            <img src={logo} alt="" className='w-[80px]' />
+            <p className='text-lg md:text-2xl font-bold'><span className='text-blue-600'>Era</span>Pintar.</p>
           </Link>
           <div className="flex items-center gap-3">
             {/* <Button className='text-blue-600' variant="ghost" asChild>
@@ -80,16 +80,16 @@ const LandingPage: React.FC = () => {
               <Sparkles className="h-4 w-4" />
               Modern E-Learning Platform
             </div>
-            
+
             <h1 className="text-4xl md:text-6xl font-bold text-foreground max-w-4xl mx-auto leading-tight">
               Success Spirit{' '}
               <span className="text-blue-600 font-extrabold">Creative.</span>
             </h1>
-            
+
             <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Akses kumpulan materi, evaluasi mandiri melalui kuis, sesi diskusi terjadwal, dan mudah diakses dimanapun untuk melanjutkan proses belajar.
             </p>
-            
+
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" asChild className="text-base px-8">
                 <Link to="/register">
@@ -185,10 +185,11 @@ const LandingPage: React.FC = () => {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
                 <GraduationCap className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-outfit font-bold text-foreground">ELLS</span>
+              <p className='text-lg md:text-2xl font-bold'><span className='text-blue-600'>Era</span>Pintar.</p>
+
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 ELLS. All rights reserved.
+              © 2025 EraPintar. All rights reserved.
             </p>
           </div>
         </div>

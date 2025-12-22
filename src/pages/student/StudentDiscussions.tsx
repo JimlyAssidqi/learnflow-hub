@@ -126,7 +126,7 @@ const StudentDiscussions: React.FC = () => {
 
   const roleColors: Record<string, string> = {
     student: 'bg-accent',
-    teacher: 'bg-primary',
+    teacher: 'bg-blue-600 text-white',
     admin: 'bg-destructive',
   };
 

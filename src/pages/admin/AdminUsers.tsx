@@ -207,7 +207,7 @@ const AdminUsers: React.FC = () => {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                    placeholder="john@example.com"
+                    placeholder="Buat password"
                     required
                   />
                 </div>

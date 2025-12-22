@@ -140,7 +140,7 @@ const TeacherDashboard: React.FC = () => {
             </div>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/teacher/materials">
-                View all
+                Lihat semua
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -163,9 +163,9 @@ const TeacherDashboard: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  {/* <Button variant="ghost" size="sm">
                     Edit
-                  </Button>
+                  </Button> */}
                 </div>
               ))}
               {materials.length === 0 && (

@@ -141,7 +141,7 @@ const StudentDashboard: React.FC = () => {
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to={`/student/materials/${material.id}`}>
+                    <Link to={`/student/materials`}>
                       View
                     </Link>
                   </Button>

@@ -103,7 +103,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               <GraduationCap className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="hidden font-outfit text-xl font-bold text-foreground md:block">
-              ELLS
+              <span className='text-blue-600'>Era</span>Pintar.
             </span>
           </Link>
 
@@ -145,7 +145,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                    <AvatarFallback className="bg-blue-600 text-primary-foreground">
                       {user.name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
