@@ -30,3 +30,28 @@ export const loginUserApi = async (data: LoginiData) => {
     return error.response.data;
   }
 }
+
+export const forgotPasswordApi = async (email: string) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/users/forgot-password`, { email });
+    return response.data;
+  } catch (error) {
+    return error.response?.data || { error: 'Terjadi kesalahan' };
+  }
+}
+
+interface ResetPasswordData {
+  email: string;
+  token: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export const resetPasswordApi = async (data: ResetPasswordData) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/users/reset-password`, data);
+    return response.data;
+  } catch (error) {
+    return error.response?.data || { error: 'Terjadi kesalahan' };
+  }
+}

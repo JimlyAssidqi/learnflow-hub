@@ -158,7 +158,13 @@ const LoginPage: React.FC = () => {
               </div>
             </div> */}
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
+            <div className="mt-4 text-center">
+              <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Lupa Password?
+              </Link>
+            </div>
+
+            <p className="mt-4 text-center text-sm text-muted-foreground">
               Belum punya akun?{' '}
               <Link to="/register" className="text-primary hover:underline font-medium">
                 Daftar
