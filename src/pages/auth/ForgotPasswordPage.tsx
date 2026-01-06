@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { GraduationCap, Mail, ArrowLeft } from 'lucide-react';
 import { forgotPasswordApi } from '@/api/auth';
 import { useToast } from '@/hooks/use-toast';
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,16 +21,23 @@ const ForgotPasswordPage: React.FC = () => {
     try {
       const response = await forgotPasswordApi(email);
       
-      if (response.success || response.message) {
-        setIsSuccess(true);
+      if (response.success || response.token) {
+        toast({
+          title: "Email Ditemukan",
+          description: "Silakan masukkan password baru Anda.",
+        });
+        // Redirect ke halaman reset password dengan token dari response
+        navigate(`/reset-password?token=${response.token}&email=${encodeURIComponent(email)}`);
+      } else if (response.message) {
+        // Jika backend mengirim email (flow lama)
         toast({
           title: "Email Terkirim",
           description: "Link reset password telah dikirim ke email Anda.",
         });
       } else {
         toast({
-          title: "Gagal",
-          description: response.error || "Gagal mengirim email reset password.",
+          title: "Email Tidak Ditemukan",
+          description: response.error || "Email tidak terdaftar dalam sistem.",
           variant: "destructive",
         });
       }
@@ -63,53 +70,31 @@ const ForgotPasswordPage: React.FC = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Lupa Password</CardTitle>
             <CardDescription>
-              {isSuccess 
-                ? "Cek email Anda untuk link reset password" 
-                : "Masukkan email Anda untuk reset password"
-              }
+              Masukkan email Anda untuk reset password
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isSuccess ? (
-              <div className="text-center space-y-4">
-                <div className="flex justify-center">
-                  <CheckCircle className="h-16 w-16 text-green-500" />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@gmail.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
                 </div>
-                <p className="text-muted-foreground">
-                  Kami telah mengirim link reset password ke <strong>{email}</strong>. 
-                  Silakan cek inbox atau folder spam Anda.
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsSuccess(false)}
-                  className="w-full"
-                >
-                  Kirim Ulang
-                </Button>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@gmail.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
 
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-                  {isLoading ? "Mengirim..." : "Kirim Link Reset"}
-                </Button>
-              </form>
-            )}
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                {isLoading ? "Memeriksa..." : "Cari Email"}
+              </Button>
+            </form>
 
             <div className="mt-6">
               <Link 
