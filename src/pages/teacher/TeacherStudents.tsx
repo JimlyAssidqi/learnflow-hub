@@ -1,17 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { getAllItems, getItemsByIndex } from '@/lib/db';
 import { User, Quiz, QuizAttempt } from '@/types';
 import { 
   Users, 
-  GraduationCap,
-  TrendingUp,
-  Award
+  Search
 } from 'lucide-react';
 import { getUserStudentApi } from '@/api/user';
 
@@ -20,6 +19,15 @@ const TeacherStudents: React.FC = () => {
   const [students, setStudents] = useState<User[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter students based on search query
+  const filteredStudents = useMemo(() => {
+    if (!searchQuery.trim()) return students;
+    return students.filter(student =>
+      student.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [students, searchQuery]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -84,12 +92,22 @@ const TeacherStudents: React.FC = () => {
         {/* Students List */}
         <Card className="glass">
           <CardHeader>
-            <CardDescription>Daftar Semu Siswa</CardDescription>
-            {/* <CardDescription>Individual student performance</CardDescription> */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <CardDescription>Daftar Semua Siswa</CardDescription>
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Cari siswa berdasarkan nama..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {students.map((student) => {
+              {filteredStudents.map((student) => {
                 const stats = getStudentStats(student.id);
                 return (
                   <div
@@ -131,10 +149,12 @@ const TeacherStudents: React.FC = () => {
                   </div>
                 );
               })}
-              {students.length === 0 && (
+              {filteredStudents.length === 0 && (
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
-                  <p className="text-muted-foreground">No students registered yet</p>
+                  <p className="text-muted-foreground">
+                    {searchQuery ? `Tidak ada siswa dengan nama "${searchQuery}"` : 'Belum ada siswa terdaftar'}
+                  </p>
                 </div>
               )}
             </div>
