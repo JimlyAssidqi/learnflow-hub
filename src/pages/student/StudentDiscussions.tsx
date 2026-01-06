@@ -49,8 +49,6 @@ const StudentDiscussions: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-
-
   useEffect(() => {
     const loadSubjects = async () => {
       const response = await getMataPelajaranApi();
@@ -58,13 +56,11 @@ const StudentDiscussions: React.FC = () => {
     };
     loadSubjects();
   }, []);
-
   useEffect(() => {
     if (selectedSubject) {
       loadMessages();
     }
   }, [selectedSubject]);
-
   const loadMessages = async () => {
     if (!selectedSubject) return;
     setLoading(true);
@@ -77,74 +73,57 @@ const StudentDiscussions: React.FC = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     if (!selectedSubject) return;
-
     const channelName = `diskusi.${selectedSubject.id}`;
-
     echo.channel(channelName)
       .listen(".diskusi.message", (e: any) => {
         setMessages((prev) => [...prev, e.diskusi]);
       });
-
     return () => {
       echo.leave(channelName);
     };
   }, [selectedSubject]);
-
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
-
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedSubject || !user) return;
-
     const message = {
       id_mata_pelajaran: String(selectedSubject.id),
       id_user: user.id,
       pesan: newMessage.trim(),
     };
-
     const response = await sendMessageApi(message);
     console.log(response)
     setNewMessage('');
-    // loadMessages();
   };
-
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
-
   const roleColors: Record<string, string> = {
     student: 'bg-accent',
     teacher: 'bg-blue-600 text-white',
     admin: 'bg-destructive',
   };
-
   const handleSelectSubject = (subject: Subject) => {
     setSelectedSubject(subject);
     setMessages([]);
   };
-
   const handleBack = () => {
     setSelectedSubject(null);
     setMessages([]);
   };
-
   return (
     <DashboardLayout>
       <div className="h-[calc(100vh-10rem)]">
         {!selectedSubject ? (
-          // Subject List View
           <div>
             <div className="mb-6">
               <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -181,7 +160,6 @@ const StudentDiscussions: React.FC = () => {
             </div>
           </div>
         ) : (
-          // Chat View
           <Card className="glass h-full flex flex-col">
             <CardHeader className="pb-3 border-b border-border">
               <div className="flex items-center gap-3">
@@ -200,7 +178,6 @@ const StudentDiscussions: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-              {/* Messages */}
               <ScrollArea className="flex-1 p-4" ref={scrollRef}>
                 <div className="space-y-4">
                   {messages.map((msg) => {
@@ -246,8 +223,6 @@ const StudentDiscussions: React.FC = () => {
                   )}
                 </div>
               </ScrollArea>
-
-              {/* Message Input */}
               <div className="p-4 border-t border-border">
                 <form
                   onSubmit={(e) => { e.preventDefault(); sendMessage(); }}

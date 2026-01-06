@@ -18,35 +18,26 @@ const RegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
     const success = await register(email, password, name, role);
-    
     if (success) {
       navigate(`/${role}`);
     }
-    
     setIsLoading(false);
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="absolute inset-0 gradient-hero opacity-5" />
-      
       <div className="relative z-10 w-full max-w-md animate-slide-up">
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-glow">
               <GraduationCap className="h-7 w-7 text-primary-foreground" />
             </div>
-            {/* <span className="font-outfit text-2xl font-bold text-foreground">EduLearn</span> */}
           </Link>
         </div>
-
         <Card className="glass border-border/50">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Buat Akun</CardTitle>
@@ -69,7 +60,6 @@ const RegisterPage: React.FC = () => {
                   />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -85,7 +75,6 @@ const RegisterPage: React.FC = () => {
                   />
                 </div>
               </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -102,42 +91,10 @@ const RegisterPage: React.FC = () => {
                   />
                 </div>
               </div>
-
-              {/* <div className="space-y-3">
-                <Label>I am a...</Label>
-                <RadioGroup
-                  value={role}
-                  onValueChange={(value) => setRole(value as UserRole)}
-                  className="grid grid-cols-2 gap-3"
-                >
-                  <div>
-                    <RadioGroupItem value="student" id="student" className="peer sr-only" />
-                    <Label
-                      htmlFor="student"
-                      className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer transition-all"
-                    >
-                      <GraduationCap className="mb-2 h-6 w-6" />
-                      <span className="text-sm font-medium">Student</span>
-                    </Label>
-                  </div>
-                  <div>
-                    <RadioGroupItem value="teacher" id="teacher" className="peer sr-only" />
-                    <Label
-                      htmlFor="teacher"
-                      className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer transition-all"
-                    >
-                      <User className="mb-2 h-6 w-6" />
-                      <span className="text-sm font-medium">Teacher</span>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div> */}
-
               <Button type="submit" className="w-full  bg-blue-600 hover:bg-blue-600" disabled={isLoading}>
                 Daftar
               </Button>
             </form>
-
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Sudah punya akun?{' '}
               <Link to="/login" className="text-primary hover:underline font-medium">

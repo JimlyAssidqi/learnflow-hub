@@ -27,7 +27,6 @@ const AdminDashboard: React.FC = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [students, setStudents] = useState<User[]>([]);
   const [teachers, setTeachers] = useState<User[]>([]);
-
   useEffect(() => {
     const loadData = async () => {
       const [allUsers, allMaterials, allQuizzes, allStudents, allTeachers] = await Promise.all([
@@ -37,21 +36,14 @@ const AdminDashboard: React.FC = () => {
         getUserStudentApi(),
         getUserTeacherApi()
       ]);
-
       setUsers(allUsers.users);
       setMaterials(allMaterials.materis);
       setQuizzes(allQuizzes);
       setStudents(allStudents.students);
       setTeachers(allTeachers.teachers);
     };
-
     loadData();
   }, []);
-
-  // const studentCount = users.filter(u => u.role === 'student').length;
-  // const teacherCount = users.filter(u => u.role === 'teacher').length;
-  // const adminCount = users.filter(u => u.role === 'admin').length;
-
   const stats = [
     {
       label: 'Total Users',
@@ -103,8 +95,6 @@ const AdminDashboard: React.FC = () => {
             </Link>
           </Button>
         </div>
-
-        {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((stat) => (
             <Card key={stat.label} className="glass glass-hover">
@@ -122,86 +112,6 @@ const AdminDashboard: React.FC = () => {
             </Card>
           ))}
         </div>
-
-        {/* Quick Actions & User List */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Quick Actions */}
-          {/* <Card className="glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                Admin Actions
-              </CardTitle>
-              <CardDescription>System management tools</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link to="/admin/users">
-                <Button variant="outline" className="w-full justify-start h-auto py-3">
-                  <Users className="mr-3 h-5 w-5 text-primary" />
-                  <div className="text-left">
-                    <p className="font-medium">Manage Users</p>
-                    <p className="text-xs text-muted-foreground">Create, edit, delete accounts</p>
-                  </div>
-                </Button>
-              </Link>
-              <Link to="/admin/content">
-                <Button variant="outline" className="w-full justify-start h-auto py-3">
-                  <BookOpen className="mr-3 h-5 w-5 text-success" />
-                  <div className="text-left">
-                    <p className="font-medium">Manage Content</p>
-                    <p className="text-xs text-muted-foreground">Review materials & quizzes</p>
-                  </div>
-                </Button>
-              </Link>
-              <Link to="/admin/settings">
-                <Button variant="outline" className="w-full justify-start h-auto py-3">
-                  <Settings className="mr-3 h-5 w-5 text-accent" />
-                  <div className="text-left">
-                    <p className="font-medium">System Settings</p>
-                    <p className="text-xs text-muted-foreground">Configure platform options</p>
-                  </div>
-                </Button>
-              </Link>
-            </CardContent>
-          </Card> */}
-
-          {/* Recent Users */}
-          {/* <Card className="glass">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Recent Users
-              </CardTitle>
-              <CardDescription>Latest registered accounts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {users.slice(0, 4).map((u) => (
-                  <div
-                    key={u.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                        u.role === 'admin' ? 'bg-destructive text-destructive-foreground' :
-                        u.role === 'teacher' ? 'bg-primary text-primary-foreground' :
-                        'bg-accent text-accent-foreground'
-                      }`}>
-                        {u.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{u.name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{u.role}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card> */}
-        </div>
-
-        {/* Content Overview */}
         <Card className="glass">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -223,11 +133,7 @@ const AdminDashboard: React.FC = () => {
                   <span className="font-medium">Materi</span>
                 </div>
                 <p className="text-3xl font-bold">{materials.length}</p>
-                <p className="text-sm text-muted-foreground">
-                  {/* {materials.filter(m => m.file_type === 'pdf').length} PDFs, {' '}
-                  {materials.filter(m => m.file_type === 'ppt').length} PPTs, {' '}
-                  {materials.filter(m => m.file_type === 'video').length} Videos */}
-                </p>
+                <p className="text-sm text-muted-foreground"></p>
               </div>
               <div className="p-4 rounded-lg bg-muted/50">
                 <div className="flex items-center gap-3 mb-3">
@@ -235,10 +141,7 @@ const AdminDashboard: React.FC = () => {
                   <span className="font-medium">Kuis</span>
                 </div>
                 <p className="text-3xl font-bold">{quizzes.length}</p>
-                <p className="text-sm text-muted-foreground">
-                  {/* {quizzes.filter(q => q.isPublished).length} Publis {' '} */}
-                  {/* {quizzes.filter(q => !q.isPublished).length} Drafts */}
-                </p>
+                <p className="text-sm text-muted-foreground"></p>
               </div>
             </div>
           </CardContent>

@@ -14,15 +14,11 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
     const success = await login(email, password);
-    
     if (success) {
-      // Navigate based on role (will be handled by auth context)
       const storedUserId = localStorage.getItem('elearn_user_id');
       if (storedUserId?.startsWith('admin')) {
         navigate('/admin');
@@ -32,42 +28,19 @@ const LoginPage: React.FC = () => {
         navigate('/student');
       }
     }
-    
     setIsLoading(false);
   };
-
-  const handleDemoLogin = async (role: 'admin' | 'teacher' | 'student') => {
-    const emails = {
-      admin: 'admin@elearn.com',
-      teacher: 'teacher@elearn.com',
-      student: 'student@elearn.com',
-    };
-    
-    setIsLoading(true);
-    const success = await login(emails[role], 'demo');
-    
-    if (success) {
-      navigate(`/${role}`);
-    }
-    
-    setIsLoading(false);
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="absolute inset-0 gradient-hero opacity-5" />
-      
       <div className="relative z-10 w-full max-w-md animate-slide-up">
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-glow">
               <GraduationCap className="h-7 w-7 text-primary-foreground" />
             </div>
-            {/* <span className="font-outfit text-2xl font-bold text-foreground">EduLearn</span> */}
           </Link>
         </div>
-
         <Card className="glass border-border/50">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Selamat Datang</CardTitle>
@@ -90,7 +63,6 @@ const LoginPage: React.FC = () => {
                   />
                 </div>
               </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -106,64 +78,15 @@ const LoginPage: React.FC = () => {
                   />
                 </div>
               </div>
-
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-600" disabled={isLoading}>
-                {/* {isLoading ? (
-                  <LoadingSpinner size="sm" className="mr-2" />
-                ) : (
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                )} */}
                 Masuk
               </Button>
             </form>
-
-            {/* <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or try demo accounts</span>
-                </div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin('student')}
-                  disabled={isLoading}
-                  className="text-xs"
-                >
-                  Student
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin('teacher')}
-                  disabled={isLoading}
-                  className="text-xs"
-                >
-                  Teacher
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin('admin')}
-                  disabled={isLoading}
-                  className="text-xs"
-                >
-                  Admin
-                </Button>
-              </div>
-            </div> */}
-
             <div className="mt-4 text-center">
               <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Lupa Password?
               </Link>
             </div>
-
             <p className="mt-4 text-center text-sm text-muted-foreground">
               Belum punya akun?{' '}
               <Link to="/register" className="text-primary hover:underline font-medium">

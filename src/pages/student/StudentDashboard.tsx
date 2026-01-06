@@ -27,33 +27,23 @@ const StudentDashboard: React.FC = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
   const [offlineMaterials, setOfflineMaterials] = useState<OfflineMaterial[]>([]);
-
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
-      
       const [allMaterials, allQuizzes, userAttempts, offline] = await Promise.all([
         getAllMateriApi(),
         getAllKuis(),
         getItemsByIndex<QuizAttempt>('quizAttempts', 'studentId', user.id),
         getAllItems<OfflineMaterial>('offlineMaterials'),
       ]);
-
       setMaterials(allMaterials?.materis)
       setQuizzes(allQuizzes?.data)
       setAttempts(userAttempts);
       setOfflineMaterials(offline);
     };
-
     loadData();
   }, [user]);
-
-  const completedQuizzes = attempts.length;
   const totalQuizzes = quizzes.length;
-  const averageScore = attempts.length > 0 
-    ? Math.round(attempts.reduce((acc, a) => acc + a.percentage, 0) / attempts.length)
-    : 0;
-
   const stats = [
     {
       label: 'Materi Tersedia',
@@ -64,18 +54,15 @@ const StudentDashboard: React.FC = () => {
     },
     {
       label: 'Kuis Tersedia',
-      // value: `${completedQuizzes}/${totalQuizzes}`,
       value: `${totalQuizzes}`,
       icon: ClipboardList,
       color: 'text-success',
       bgColor: 'bg-success/10',
     },
   ];
-
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
@@ -92,8 +79,6 @@ const StudentDashboard: React.FC = () => {
             </Link>
           </Button>
         </div>
-
-        {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((stat) => (
             <Card key={stat.label} className="glass glass-hover">
@@ -111,8 +96,6 @@ const StudentDashboard: React.FC = () => {
             </Card>
           ))}
         </div>
-
-        {/* Recent Materials */}
         <Card className="glass">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

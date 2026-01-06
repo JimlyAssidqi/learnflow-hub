@@ -49,48 +49,37 @@ const StudentMaterials: React.FC = () => {
   const [offlineMaterials, setOfflineMaterials] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [downloading, setDownloading] = useState<number | null>(null);
-
   useEffect(() => {
     loadSubjects();
     loadOfflineMaterials();
   }, []);
-
   const loadSubjects = async () => {
     const response = await getMataPelajaranApi();
     setSubjects(response.data);
   };
-
   const loadOfflineMaterials = async () => {
     const allOffline = await getAllItems<OfflineMaterial>('offlineMaterials');
     setOfflineMaterials(allOffline.map(o => o.materialId));
   };
-
   useEffect(() => {
     if (selectedSubject) {
       loadMaterials();
     }
   }, [selectedSubject]);
-
   const loadMaterials = async () => {
     if (!selectedSubject) return;
     const response = await getMateriByMataPelajaranApi(selectedSubject.id);
     setMaterials(response.materi);
   };
-
   const filteredMaterials = materials.filter(m =>
     m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     m.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
+  )
   const handleDownload = async (material: Material) => {
     if (!material.id) return;
     setDownloading(material.id);
-    
     try {
-      // Open file in new tab for download
       window.open(`${API_URL}/${material.file_url}`, '_blank');
-
-      // Save to offline storage
       const offlineMaterial: OfflineMaterial = {
         id: `offline-${material.id}`,
         materialId: String(material.id),
@@ -99,10 +88,8 @@ const StudentMaterials: React.FC = () => {
         fileBlob: new Blob(),
         cachedAt: new Date().toISOString(),
       };
-
       await addItem('offlineMaterials', offlineMaterial);
       setOfflineMaterials(prev => [...prev, String(material.id)]);
-
       toast({
         title: 'Downloaded successfully!',
         description: 'Material saved for offline access.',
@@ -117,14 +104,11 @@ const StudentMaterials: React.FC = () => {
       setDownloading(null);
     }
   };
-
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
-
-  // Subject Selection View
   if (!selectedSubject) {
     return (
       <DashboardLayout>
@@ -135,7 +119,6 @@ const StudentMaterials: React.FC = () => {
               Pilih mata pelajaran untuk melihat materi
             </p>
           </div>
-
           {subjects.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {subjects.map((subject) => (
@@ -175,8 +158,6 @@ const StudentMaterials: React.FC = () => {
       </DashboardLayout>
     );
   }
-
-  // Materials View for Selected Subject
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -192,24 +173,12 @@ const StudentMaterials: React.FC = () => {
               </div>
             </div>
           </div>
-          {/* <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Cari materi..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div> */}
         </div>
-
-        {/* Materials Grid */}
         {filteredMaterials.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredMaterials.map((material) => {
               const Icon = typeIcons[material.file_type || ''] ?? FileType;
               const isOffline = offlineMaterials.includes(String(material.id));
-              
               return (
                 <Card key={material.id} className="glass glass-hover">
                   <CardHeader className="pb-3">
@@ -261,9 +230,6 @@ const StudentMaterials: React.FC = () => {
           <div className="text-center py-12">
             <BookOpen className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground">Materi belum tersedia</h3>
-            {/* <p className="text-muted-foreground mt-1">
-              {searchQuery ? 'Try a different search term' : 'Check back later for new content'}
-            </p> */}
           </div>
         )}
       </div>

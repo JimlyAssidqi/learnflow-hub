@@ -23,45 +23,23 @@ const TeacherDashboard: React.FC = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [students, setStudents] = useState<User[]>([]);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
-
-    // useEffect(() => {
-    //   loadMaterials();
-    // }, [user]);
-    
-    // const loadMaterials = async () => {
-    //   if (!user) return;
-    //   const response = await getMateriByGuruApi(user.id);
-    //   setMaterials(response.materi);
-    // };
-
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
-      
       const [response, allQuizzes, allUsers, allAttempts] = await Promise.all([
         getMateriByGuruApi(user.id),
         getItemsByIndex<Quiz>('quizzes', 'teacherId', user.id),
         getAllItems<User>('users'),
         getAllItems<QuizAttempt>('quizAttempts'),
       ]);
-
       setMaterials(response.materi);
       console.log(response.materi);
       setQuizzes(allQuizzes);
-      
-      // Get attempts for teacher's quizzes
       const quizIds = allQuizzes.map(q => q.id);
       setAttempts(allAttempts.filter(a => quizIds.includes(a.quizId)));
     };
-
     loadData();
   }, [user]);
-
-  const totalDownloads = materials.reduce((acc, m) => acc + m.downloadCount, 0);
-  const averageScore = attempts.length > 0
-    ? Math.round(attempts.reduce((acc, a) => acc + a.percentage, 0) / attempts.length)
-    : 0;
-
   const stats = [
     {
       label: 'Materi Diupload',
@@ -85,11 +63,9 @@ const TeacherDashboard: React.FC = () => {
       bgColor: 'bg-accent/10',
     }
   ];
-
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
@@ -111,8 +87,6 @@ const TeacherDashboard: React.FC = () => {
             </Button>
           </div>
         </div>
-
-        {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((stat) => (
             <Card key={stat.label} className="glass glass-hover">
@@ -130,8 +104,6 @@ const TeacherDashboard: React.FC = () => {
             </Card>
           ))}
         </div>
-
-        {/* Materials List */}
         <Card className="glass">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -163,9 +135,6 @@ const TeacherDashboard: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  {/* <Button variant="ghost" size="sm">
-                    Edit
-                  </Button> */}
                 </div>
               ))}
               {materials.length === 0 && (

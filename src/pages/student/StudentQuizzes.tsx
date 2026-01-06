@@ -71,14 +71,12 @@ const StudentQuizzes: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [completedQuizzes, setCompletedQuizzes] = useState<Map<number, CompletedQuizResult>>(new Map());
   const [viewingResult, setViewingResult] = useState<CompletedQuizResult | null>(null);
-
   const [activeQuiz, setActiveQuiz] = useState<ApiQuiz | null>(null);
   const [activeQuestions, setActiveQuestions] = useState<ApiQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState({ correct: 0, total: 0 });
-
   useEffect(() => {
     loadKuis();
   }, []);
@@ -100,24 +98,17 @@ const StudentQuizzes: React.FC = () => {
       setLoading(false);
     }
   };
-
   const loadAnswer = async (quizList: ApiQuiz[]) => {
     if (!user?.id) return;
-    
     try {
       const response = await getJawabanBySiswa(user.id);
       if (response?.jawaban && response.jawaban.length > 0) {
-        // Group answers by quiz
         const jawabanMap = new Map<number, JawabanSiswa[]>();
         const soalIdSet = new Set<number>();
-        
         response.jawaban.forEach((jawaban: JawabanSiswa) => {
           soalIdSet.add(jawaban.id_soal);
         });
-        
-        // For each quiz, check if it has answered questions
         const completedMap = new Map<number, CompletedQuizResult>();
-        
         for (const quiz of quizList) {
           try {
             const soalResponse = await getSoalBuKuis(quiz.id.toString());
@@ -126,7 +117,6 @@ const StudentQuizzes: React.FC = () => {
               const quizJawaban = response.jawaban.filter((j: JawabanSiswa) => 
                 quizSoalIds.includes(j.id_soal)
               );
-              
               if (quizJawaban.length > 0) {
                 const totalSkor = quizJawaban.reduce((acc: number, j: JawabanSiswa) => acc + j.skor_jawaban, 0);
                 completedMap.set(quiz.id, {
@@ -141,14 +131,12 @@ const StudentQuizzes: React.FC = () => {
             console.error('Error loading quiz questions:', e);
           }
         }
-        
         setCompletedQuizzes(completedMap);
       }
     } catch (error) {
       console.error('Error loading answers:', error);
     }
   };
-
   const startQuiz = async (quiz: ApiQuiz) => {
     try {
       setLoadingQuestions(true);
@@ -177,7 +165,6 @@ const StudentQuizzes: React.FC = () => {
       setLoadingQuestions(false);
     }
   };
-
   const viewResult = (quiz: ApiQuiz) => {
     const result = completedQuizzes.get(quiz.id);
     if (result) {
@@ -185,44 +172,31 @@ const StudentQuizzes: React.FC = () => {
       setActiveQuiz(quiz);
     }
   };
-
   const handleAnswer = (questionId: number, answer: string) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
-
   const nextQuestion = () => {
     if (currentQuestionIndex < activeQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     }
   };
-
   const prevQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
     }
   };
-
   const submitQuiz = async () => {
     if (!activeQuiz || !user) return;
-
     try {
       setSubmitting(true);
-
-      // Submit each answer to the API
       for (const question of activeQuestions) {
-        const jawaban = answers[question.id]; // "A" / "B" / "C" / "D"
-        // const jawabanTeks = getOptionByKey(question, pilihanHuruf); // teks asli
-        // console.log(question, pilihanHuruf);
-        // console.log(pilihanHuruf);
-
+        const jawaban = answers[question.id]; 
         await jawabSoalKuis({
           id_soal: question.id,
           id_siswa: parseInt(user.id),
           jawaban_siswa: jawaban
         });
       }
-
-      // Calculate score locally for display
       let correctCount = 0;
       activeQuestions.forEach(question => {
         const userAnswer = answers[question.id];
@@ -230,11 +204,9 @@ const StudentQuizzes: React.FC = () => {
           correctCount++;
         }
       });
-
       setScore({ correct: correctCount, total: activeQuestions.length });
       setShowResults(true);
       loadKuis();
-
       toast({
         title: 'Kuis selesai!',
         description: `Jawaban Anda telah dikirim.`,
@@ -249,7 +221,6 @@ const StudentQuizzes: React.FC = () => {
       setSubmitting(false);
     }
   };
-
   const closeQuiz = () => {
     setActiveQuiz(null);
     setActiveQuestions([]);
@@ -257,9 +228,7 @@ const StudentQuizzes: React.FC = () => {
     setScore({ correct: 0, total: 0 });
     setViewingResult(null);
   };
-
   const currentQuestion = activeQuestions[currentQuestionIndex];
-
   const getOptionByKey = (question: ApiQuestion, key: string) => {
     switch (key) {
       case 'A': return question.opsi_a;
@@ -269,10 +238,8 @@ const StudentQuizzes: React.FC = () => {
       default: return '';
     }
   };
-
   const answeredCount = Object.keys(answers).length;
   const allAnswered = answeredCount === activeQuestions.length;
-
   if (loading) {
     return (
       <DashboardLayout>
@@ -282,7 +249,6 @@ const StudentQuizzes: React.FC = () => {
       </DashboardLayout>
     );
   }
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -367,7 +333,6 @@ const StudentQuizzes: React.FC = () => {
             );
           })}
         </div>
-
         {quizzes.length === 0 && (
           <div className="text-center py-12">
             <ClipboardList className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
@@ -377,11 +342,8 @@ const StudentQuizzes: React.FC = () => {
             </p>
           </div>
         )}
-
-        {/* Quiz Dialog */}
         <Dialog open={!!activeQuiz} onOpenChange={() => !showResults && !submitting && !viewingResult && closeQuiz()}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            {/* View Result Mode */}
             {viewingResult && activeQuiz && (
               <>
                 <DialogHeader>
@@ -393,12 +355,10 @@ const StudentQuizzes: React.FC = () => {
                     Total Skor: <span className="font-bold text-primary">{viewingResult.totalSkor}</span>
                   </DialogDescription>
                 </DialogHeader>
-
                 <div className="space-y-4 py-4">
                   {viewingResult.questions.map((question, index) => {
                     const jawaban = viewingResult.jawaban.find(j => j.id_soal === question.id);
                     const isCorrect = jawaban?.apakah_benar === 'benar';
-                    
                     return (
                       <div 
                         key={question.id} 
@@ -416,7 +376,6 @@ const StudentQuizzes: React.FC = () => {
                             {jawaban?.skor_jawaban || 0} poin
                           </Badge>
                         </div>
-                        
                         <div className="space-y-1 text-sm">
                           <p className="text-muted-foreground">
                             Jawaban Anda: <span className={isCorrect ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
@@ -438,14 +397,11 @@ const StudentQuizzes: React.FC = () => {
                     );
                   })}
                 </div>
-
                 <Button className="w-full mt-4" onClick={closeQuiz}>
                   Tutup
                 </Button>
               </>
             )}
-
-            {/* Take Quiz Mode */}
             {!showResults && !viewingResult && activeQuiz && currentQuestion && (
               <>
                 <DialogHeader>
@@ -455,18 +411,15 @@ const StudentQuizzes: React.FC = () => {
                     Dijawab: {answeredCount}/{activeQuestions.length}
                   </DialogDescription>
                 </DialogHeader>
-
                 <Progress
                   value={(currentQuestionIndex + 1) / activeQuestions.length * 100}
                   className="h-2"
                 />
-
                 <div className="py-6">
                   <p className="text-lg font-medium mb-4">{currentQuestion.pertanyaan}</p>
                   <Badge variant="outline" className="mb-4">
                     {currentQuestion.skor_soal} poin
                   </Badge>
-
                   <RadioGroup
                     value={answers[currentQuestion.id] || ''}
                     onValueChange={(value) => handleAnswer(currentQuestion.id, value)}
